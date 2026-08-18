@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Cpu, Globe, Blocks } from "lucide-react";
-import { aboutData } from "../data/aboutData";
+import { aboutData } from "../../data/aboutData";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
