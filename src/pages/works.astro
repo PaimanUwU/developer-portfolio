@@ -1,0 +1,31 @@
+---
+import Layout from "../layouts/Layout.astro";
+import WorksList from "../components/WorksList.tsx";
+import SidebarInfo from "../components/SidebarInfo.tsx";
+import { getCollection } from 'astro:content';
+
+const allWorks = await getCollection('works');
+const sortedWorks = allWorks.sort((a, b) => {
+  return b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
+}).map(work => ({
+  slug: work.slug,
+  data: work.data,
+  url: `/works/${work.slug}`
+}));
+---
+
+<Layout title="Works | Portfolio">
+  <div class="top-0 z-0 min-h-screen w-full phone:p-4 desktop:pl-20 desktop:p-8">
+    <span class="p-4 mb-2 font-mono text-sm text-gray-500 block">-// Works</span>
+    
+    <div class="mb-[10vh] desktop:grid grid-cols-4 items-start gap-8">
+      <div class="desktop:sticky desktop:top-30 col-span-1 flex flex-col gap-4 pb-8">
+        <SidebarInfo client:load />
+      </div>
+      <div class="col-span-3">
+        <WorksList projects={sortedWorks} client:load />
+      </div>
+    </div>
+
+  </div>
+</Layout>

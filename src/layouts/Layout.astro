@@ -1,0 +1,49 @@
+---
+import "../styles/global.css";
+import Navbar from "../components/Navbar.tsx";
+import MobileMenu from "../components/MobileMenu.tsx";
+import Footer from "../components/Footer.tsx";
+import CustomCursor from "../components/CustomCursor.tsx";
+import { ClientRouter } from 'astro:transitions'; // 1. Import Router
+
+const pathname = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/Icon Light.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    <title>Paiman Portfolio</title>
+    
+    <ClientRouter /> </head>
+  <body class="bg-white text-black overflow-x-hidden">
+    <div class="absolute z-50 top-0 h-full w-fit flex-none">
+      <Navbar client:load transition:persist currentPath={pathname} />
+    </div>
+
+    <MobileMenu client:load transition:persist currentPath={pathname} />
+
+    <main class="relative w-full">
+      <slot />
+      <Footer client:load transition:persist />
+    </main>
+
+    <CustomCursor client:load transition:persist />
+
+    <script>
+      // With ClientRouter, use 'astro:after-swap' or 'astro:page-load' 
+      // instead of standard 'load' for scroll logic
+      document.addEventListener("astro:after-swap", () => {
+        window.scrollTo(0, 0);
+      });
+
+      if ("scrollRestoration" in history) {
+        history.scrollRestoration = "manual";
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+---
+import Layout from "../layouts/Layout.astro";
+import BlogList from "../components/BlogList.tsx";
+import { getCollection } from "astro:content";
+
+const allPosts = await getCollection("blog");
+const sortedPosts = allPosts.sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+---
+
+<Layout title="Blogs | Portfolio">
+  <div class="top-0 z-0 min-h-screen w-full phone:p-4 desktop:pl-20 desktop:p-8">
+    <span class="p-4 mb-2 font-mono text-sm text-gray-500 block">-// Blogs</span>
+    
+    <div class="mt-8">
+      <BlogList posts={sortedPosts} client:load />
+    </div>
+  </div>
+</Layout>
