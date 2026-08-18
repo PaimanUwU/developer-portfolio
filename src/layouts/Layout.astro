@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar.tsx";
 import MobileMenu from "../components/MobileMenu.tsx";
 import Footer from "../components/Footer.tsx";
 import CustomCursor from "../components/CustomCursor.tsx";
+import SmoothScroll from "../components/SmoothScroll.tsx";
 import { ClientRouter } from 'astro:transitions'; // 1. Import Router
 
 const pathname = Astro.url.pathname;
@@ -33,6 +34,7 @@ const pathname = Astro.url.pathname;
     </main>
 
     <CustomCursor client:load transition:persist />
+    <SmoothScroll client:load />
 
     <script>
       // With ClientRouter, use 'astro:after-swap' or 'astro:page-load' 
