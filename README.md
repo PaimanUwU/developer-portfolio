@@ -1,53 +1,82 @@
-# Astro Starter Kit: Basics
+# Modern Developer Portfolio
 
-# new codes goes here
+A sleek, high-performance personal portfolio and blog built with **Astro**, **React**, and **Tailwind CSS**. Designed with modern aesthetics, custom animations via Framer Motion, and seamless Markdown-powered content management for works and blogs.
 
+## ✨ Features
 
-```sh
-npm create astro@latest -- --template basics
-```
+- **Blazing Fast Performance**: Built on Astro for optimized static generation and minimal client-side JavaScript.
+- **Interactive UI Components**: Powered by React & Framer Motion for smooth transitions, custom cursor effects, and interactive menus.
+- **Dynamic Content Management**: Markdown-powered content collections for projects (`works`) and articles (`blog`).
+- **Developer Integrations**: Built-in GitHub contribution calendar and live typing animations (`Typed.js`).
+- **Fully Responsive**: Mobile-friendly navigation with custom drawers and a responsive layout.
+- **Styling**: Styled using Tailwind CSS v4 with custom typography plugins.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+## 🚀 Tech Stack
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+- **Framework**: [Astro v5](https://astro.build/)
+- **UI Library**: [React v19](https://react.dev/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Icons**: [Lucide Icons](https://lucide.dev/)
+- **Utilities**: Typed.js, React GitHub Calendar
 
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
+## 📂 Project Structure
 
 ```text
 /
-├── public/
-│   └── favicon.svg
+├── public/                 # Static assets (images, icons)
 ├── src/
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
+│   ├── assets/             # Brand and background SVGs/images
+│   ├── components/         # Reusable React & Astro components (Navbar, Hero, Footer, etc.)
+│   ├── content/            # Markdown content collections (blog posts & portfolio works)
+│   ├── data/               # Static configuration & profile data
+│   ├── layouts/            # Page layout templates
+│   ├── pages/              # Astro routing pages (index, works, blogs)
+│   ├── styles/             # Global CSS styles
+│   └── utils/              # Helper functions (date formatting, etc.)
+├── astro.config.mjs        # Astro configuration
+├── tailwind.config.mjs     # Tailwind CSS configuration
+└── package.json            # Project dependencies & scripts
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## 🧞 Getting Started
 
-## 🧞 Commands
+### Prerequisites
 
-All commands are run from the root of the project, from a terminal:
+Make sure you have **Node.js** (v18 or higher) and **npm** installed on your machine.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+### Installation & Development
 
-## 👀 Want to learn more?
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/your-username/your-portfolio.git
+   cd your-portfolio
+   ```
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-# portfolio
-# developer-portfolio
+2. Install dependencies:
+   ```sh
+   npm install
+   ```
+
+3. Start the local development server:
+   ```sh
+   npm run dev
+   ```
+   Open your browser and navigate to `http://localhost:4321`.
+
+### Building for Production
+
+To build the site for production into the `./dist/` directory:
+```sh
+npm run build
+```
+
+To preview the production build locally:
+```sh
+npm run preview
+```
+
+## 📝 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
