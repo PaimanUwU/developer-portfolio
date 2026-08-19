@@ -2,13 +2,39 @@
 import "../styles/global.css";
 import Layout from "../layouts/Layout.astro";
 import Hero from "../components/sections/Hero.tsx";
+import DevStack from "../components/sections/DevStack.tsx";
+import HorizontalScroll from "../components/sections/HorizontalScroll.tsx";
+import ServicesOverview from "../components/sections/ServicesOverview.tsx";
+import AcademicExperience from "../components/sections/AcademicExperience.tsx";
+import BlogPreview from "../components/sections/BlogPreview.astro";
+import ContactCallout from "../components/sections/ContactCallout.tsx";
 ---
 
-<Layout title="About Me">
-  <div class="w-full desktop:pl-4 ">
+<Layout title="About Me" home={true}>
+  <div class="w-full flex flex-col gap-24">
+    <!-- 1. Hero -->
     <Hero client:load />
-  </div>
-  <div class="w-full h-screen">
-  
+    
+    <div class="animate-pattern-move flex justify-end items-end mt-8 min-h-[20vh] desktop:min-h-[30vh] p-4 tablet:p-10 rounded-b-main bg-[repeating-linear-gradient(135deg,_#f3f4f6_0,_#334155_2px,_transparent_0,_transparent_50%)] bg-[size:20px_20px] gap-2"> </div>
+
+    <!-- 2. Featured Works -->
+    <HorizontalScroll client:load />
+
+    <!-- 3. Services Overview -->
+    <ServicesOverview client:visible />
+
+    <!-- 4. Skillset & Tools -->
+    <DevStack client:visible />
+
+    <!-- 5. Academic Background & Experience -->
+    <AcademicExperience client:visible />
+
+    <!-- 6. Latest Blogs / Insights -->
+    <BlogPreview client:visible />
+
+    <!-- 7. Contact Callout -->
+    <!-- <ContactCallout client:visible /> -->
+    <div class="h-[20vh]">
+    </div>
   </div>
 </Layout>
