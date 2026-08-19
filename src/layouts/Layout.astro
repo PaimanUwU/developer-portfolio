@@ -10,10 +10,11 @@ import { ClientRouter } from 'astro:transitions'; // 1. Import Router
 const pathname = Astro.url.pathname;
 
 interface Props {
-	title?: string;
+  title?: string;
+  home?: boolean;
 }
 
-const { title = "PaimanUwU" } = Astro.props;
+const { home, title = "PaimanUwU" } = Astro.props;
 ---
 
 <!doctype html>
@@ -33,13 +34,13 @@ const { title = "PaimanUwU" } = Astro.props;
     <SmoothScroll client:load />
 
     <div class="absolute z-50 top-0 h-full w-fit flex-none">
-      <Navbar client:load transition:persist currentPath={pathname} />
+      <Navbar client:load transition:persist currentPath={pathname} home={home} />
     </div>
 
     <MobileMenu client:load transition:persist currentPath={pathname} />
 
-    <main class="relative w-full top-0 z-0 min-h-screen phone:p-4 desktop:pl-20 desktop:p-8">
-      <span class="p-4 mb-2 font-mono text-sm text-gray-500 block">-// {title}</span>
+    <main class={`relative w-full top-0 z-0 min-h-screen ${home ? '' : 'desktop:pl-20'}`}>
+      {!home && <span class="p-4 mb-2 font-mono text-sm text-gray-500 block">-// {title}</span>}
       <slot />
     </main>
     <Footer client:load transition:persist />
