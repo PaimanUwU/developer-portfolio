@@ -57,7 +57,7 @@ export default function Navbar({ currentPath: initialPath, home }: NavProps) {
 
   return (
     <motion.div
-      className="sticky z-50 top-0 left-0 h-fit tablet:h-screen w-16 desktop:w-23 p-2 desktop:p-6 flex flex-col justify-between"
+      className="sticky z-50 top-0 left-0 h-fit tablet:h-screen w-12 desktop:w-23 p-2 desktop:p-6 flex flex-col justify-between border-r border-gray-200 bg-white/70 backdrop-blur-md"
       style={{
         translateZ: 0,
         pointerEvents: home && !showNavbar ? "none" : "auto",
@@ -76,7 +76,7 @@ export default function Navbar({ currentPath: initialPath, home }: NavProps) {
           <a
             key={link.href}
             href={link.href}
-            className={`-rotate-90 px-6 py-3 inline-flex gap-4 items-center text-gray-900 rounded-md font-bold transition-all group ${getActiveStyles(
+            className={`-rotate-90 px-6 py-3 inline-flex gap-4 items-center text-gray-900  font-bold transition-all group ${getActiveStyles(
               link.href,
             )}`}
           >
@@ -91,7 +91,7 @@ export default function Navbar({ currentPath: initialPath, home }: NavProps) {
           href="https://github.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="group bg-base-100 rounded-main w-full aspect-square flex items-center justify-center text-accent cursor-pointer transition-all ease-in-out duration-300 hover:scale-125"
+          className="group bg-base-100  w-full aspect-square flex items-center justify-center text-accent cursor-pointer transition-all ease-in-out duration-300 hover:scale-125"
         >
           <img src="/github.svg" alt="github icon" className="w-4 tablet:w-5" />
         </a>
@@ -99,7 +99,7 @@ export default function Navbar({ currentPath: initialPath, home }: NavProps) {
           href="https://linkedin.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="group bg-base-100 rounded-main w-full aspect-square flex items-center justify-center text-accent cursor-pointer transition-all ease-in-out duration-300 hover:scale-125"
+          className="group bg-base-100  w-full aspect-square flex items-center justify-center text-accent cursor-pointer transition-all ease-in-out duration-300 hover:scale-125"
         >
           <img
             src="/linkedin.svg"
