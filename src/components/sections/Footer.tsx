@@ -14,14 +14,14 @@ export default function Footer() {
   });
 
   return (
-    <footer className="border-t-2 border-gray-200 bg-gray-50 relative w-full desktop:py-16 ">
-      <div className="max-w-[94vw] mx-auto grid grid-cols-1 desktop:grid-cols-12 gap-12">
+    <footer className="border-t border-gray-200 bg-gray-50 relative w-full desktop:py-16 ">
+      <div className="desktop:pl-2 ml-23 max-w-[94vw] grid grid-cols-1 desktop:grid-cols-12 gap-12">
         {/* Brand & Status Column */}
         <div className="tablet:col-span-7 gap-10 flex flex-col pt-8 pb-4 desktop:pt-0">
           <div>
-            <h2 className="desktop:pl-10 desktop:-translate-y-10 translate-y-4 text-5xl tablet:text-9xl font-bold text-gray-900 tracking-tighter ">
+            <h2 className="desktop:-translate-y-10 translate-y-4 text-5xl tablet:text-9xl font-bold text-gray-900 tracking-tighter ">
               paimanuwu
-              <span className="text-blue-500 text-xl tablet:text-2xl tracking-normal">
+              <span className="ml-2 text-blue-500 text-xl tablet:text-2xl tracking-normal">
                 .dev
               </span>
             </h2>
@@ -105,7 +105,7 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="mt-16 pt-8 desktop:pl-26 desktop:pr-16 border-t border-gray-200 hidden desktop:flex flex-col flex-row justify-between items-center gap-4 text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+      <div className="mt-16 pt-8 desktop:pl-26 desktop:pr-2 border-t border-gray-200 hidden desktop:flex flex-col flex-row justify-between items-center gap-4 text-[10px] font-mono text-gray-400 uppercase tracking-widest">
         <div className="flex items-center gap-3 w-fit">
           {/* <span className="relative flex h-2 w-2"> */}
           {/*   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span> */}
@@ -118,7 +118,7 @@ export default function Footer() {
       </div>
 
       {/* Pattern Box with Individual Hover Tags */}
-      <div className="desktop:pl-26 desktop:pr-16 pt-8 desktop:pt-0">
+      <div className="desktop:pl-26 desktop:pr-2 pt-8 desktop:pt-0">
         <div className="animate-pattern-move flex justify-end items-end  mt-8 min-h-[20vh] desktop:min-h-[30vh] p-4 tablet:p-10 rounded-b-main bg-[repeating-linear-gradient(135deg,_#f3f4f6_0,_#334155_2px,_transparent_0,_transparent_50%)] bg-[size:20px_20px] gap-2">
           <div className="hidden desktop:flex text-sm text-gray-500 font-mono flex-wrap gap-x-0.5 items-center bg-white h-fit p-1 shadow-sm">
             <span className="mr-2 italic">I love caffeine</span>
