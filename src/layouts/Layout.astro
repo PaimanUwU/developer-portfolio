@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import LoadingScreen from "../components/LoadingScreen.tsx";
 import Navbar from "../components/Navbar.tsx";
 import MobileMenu from "../components/MobileMenu.tsx";
 import Footer from "../components/sections/Footer.tsx";
@@ -24,16 +25,19 @@ const { home, title = "PaimanUwU" } = Astro.props;
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/Icon Light.svg" />
     <meta name="generator" content={Astro.generator} />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet" />
     <title>{title}</title>
    
     <ClientRouter /> 
   </head>
   <body class="bg-white text-black overflow-x-hidden">
+    <LoadingScreen client:load transition:persist />
     <CustomCursor client:load transition:persist />
     <SmoothScroll client:load />
 
-    <div class="absolute z-50 top-0 h-full w-fit flex-none">
+    <div class="absolute z-30 top-0 h-full w-fit flex-none">
       <Navbar client:load transition:persist currentPath={pathname} home={home} />
     </div>
 
@@ -46,15 +50,26 @@ const { home, title = "PaimanUwU" } = Astro.props;
     <Footer client:load transition:persist />
 
     <script>
-      // With ClientRouter, use 'astro:after-swap' or 'astro:page-load' 
-      // instead of standard 'load' for scroll logic
-      document.addEventListener("astro:after-swap", () => {
-        window.scrollTo(0, 0);
-      });
-
+      // Disable browser scroll restoration so we always control position
       if ("scrollRestoration" in history) {
         history.scrollRestoration = "manual";
       }
+
+      function scrollToTop() {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+
+      // astro:before-swap — earliest hook, fires before DOM swap
+      // This is critical: sets window.scrollY = 0 BEFORE Lenis is reconstructed
+      document.addEventListener("astro:before-swap", scrollToTop);
+
+      // astro:after-swap — fires after new DOM is inserted, safety net
+      document.addEventListener("astro:after-swap", scrollToTop);
+
+      // astro:page-load — fires after full hydration, catches the initial load
+      document.addEventListener("astro:page-load", scrollToTop);
     </script>
   </body>
 </html>
