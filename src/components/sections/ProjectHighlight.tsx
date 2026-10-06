@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   motion,
   useScroll,
@@ -70,6 +71,10 @@ const projects: ProjectCard[] = [
     images: [],
   },
 ];
+
+// The card that is selected on load (and whenever the user scrolls away and back).
+// Derived so it stays "the middle one" if you add or remove projects.
+const DEFAULT_SLUG = projects[Math.floor(projects.length / 2)].slug;
 
 // ─── Fan layout ───────────────────────────────────────────────────────────────
 // The outer cards sit lower than the middle one; the selected card lifts up.
@@ -186,10 +191,8 @@ function FilmStrip({
 
   return (
     <div
-      className={`w-full overflow-hidden rounded-lg bg-[#151d20] ${vertical ? "h-full" : ""}`}
-      style={
-        vertical ? { padding: gap } : { paddingBlock: gap, paddingLeft: gap }
-      }
+      className={`w-full overflow-hidden  bg-[#151d20] ${vertical ? "h-full" : ""}`}
+      style={vertical ? { padding: gap } : { paddingBlock: gap }}
     >
       {/* Clip window: frames disappear at the padding edge, like film */}
       <div
@@ -211,7 +214,7 @@ function FilmStrip({
               {set.map((src, idx) => (
                 <div
                   key={idx}
-                  className="film-frame aspect-video flex-none overflow-hidden rounded-[10px] bg-white"
+                  className="film-frame aspect-video flex-none overflow-hidden  bg-white"
                   style={
                     vertical
                       ? { width: "100%", marginBottom: gap }
@@ -286,11 +289,13 @@ function ProjectCardUI({
     >
       <motion.div
         layout
+        // Render in the current state on mount: no lift animation for the
+        // pre-selected card on first paint.
+        initial={false}
         onClick={onClick}
         style={{ width: cardW }}
         className={`
-          relative aspect-[2/3] cursor-pointer select-none
-          rounded-xl bg-[#151d20] p-1.5 transition-shadow duration-300
+          relative aspect-[2/3] cursor-pointer select-none bg-[#151d20] p-1.5 transition-shadow duration-300
           ${isSelected ? "ring-4 ring-blue-500" : "hover:shadow-xl"}
         `}
         animate={{
@@ -309,13 +314,13 @@ function ProjectCardUI({
         transition={{ duration: 0.35, ease: "easeOut" }}
       >
         {/* Inner face (the darker rim around it is the card's shell) */}
-        <div className="flex h-full flex-col justify-between rounded-md bg-[#1c2427] p-1.5 text-white">
+        <div className="flex h-full flex-col justify-between  bg-[#1c2427] p-1.5 text-white">
           {/* Top: stack chips */}
           <div className="flex flex-wrap content-start gap-x-1.5 gap-y-2">
             {project.stack.slice(0, 3).map((tech) => (
               <span
                 key={tech}
-                className="rounded-md border border-white/20 bg-white/5 px-1.5 py-1 text-[9px] leading-[14px] text-gray-400"
+                className=" border border-white/20 bg-white/5 px-1.5 py-1 text-[9px] leading-[14px] text-gray-400"
               >
                 {tech}
               </span>
@@ -329,10 +334,10 @@ function ProjectCardUI({
 
           {/* Bottom: title + description */}
           <div className="flex flex-col gap-2">
-            <h3 className="text-xs font-bold leading-tight tracking-tight">
+            <h3 className="text-[14px] font-bold leading-tight tracking-tight">
               {project.title}
             </h3>
-            <p className="line-clamp-3 text-[9px] leading-relaxed text-gray-400">
+            <p className="line-clamp-3 text-[12px] leading-relaxed text-gray-400">
               {project.description}
             </p>
           </div>
@@ -347,7 +352,14 @@ export default function ProjectHighlight() {
   const containerRef = useRef<HTMLDivElement>(null);
   const metrics = useMetrics();
   const { mobile } = metrics;
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+
+  // Gate portal rendering to client-side only
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  // Pre-selected on load, so the film strip is already showing.
+  // A static initial value keeps server HTML and client HTML identical.
+  const [selectedProject, setSelectedProject] = useState<string>(DEFAULT_SLUG);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -355,42 +367,31 @@ export default function ProjectHighlight() {
   });
 
   // Phase mapping across scroll progress:
-  //  0.00 – 0.30  →  Quote text visible (fades in, stays)
-  //  0.20 – 0.50  →  Cards fan in from below
-  //  0.50 – 0.90  →  Cards + film strip sticky (interactive zone)
-  //  0.90 – 1.00  →  Exit / fade out
+  //  0.00 – 0.32  →  Cards + film strip already visible (pile, middle card selected)
+  //  0.32 – 0.50  →  Cards spread from the pile into the fan
+  //  0.50 – 0.95  →  Interactive zone
+  //  0.95 – 1.00  →  Exit
 
-  const quoteOpacity = useTransform(
-    scrollYProgress,
-    [0, 0.1, 0.25, 0.35],
-    [0, 1, 1, 0],
-  );
-  const quoteY = useTransform(
-    scrollYProgress,
-    [0, 0.1, 0.25, 0.35],
-    [60, 0, 0, -40],
-  );
+  // The cards layer is visible from the first frame (no fade/slide/scale-in),
+  // so the pre-selected film strip is there as soon as the section appears.
 
-  const cardsOpacity = useTransform(
-    scrollYProgress,
-    [0.2, 0.35, 0.85, 0.95],
-    [0, 1, 1, 0],
-  );
-  const cardsY = useTransform(scrollYProgress, [0.2, 0.35], [120, 0]);
-  const cardsScale = useTransform(scrollYProgress, [0.2, 0.35], [0.85, 1]);
-
-  // Cards first arrive as one pile, then spread into the fan as you keep scrolling
-  const spreadRaw = useTransform(scrollYProgress, [0.32, 0.5], [0, 1]);
+  // Cards first sit as one pile, then spread into the fan as you keep scrolling
+  const spreadRaw = useTransform(scrollYProgress, [0.12, 0.2], [0, 1]);
   const spread = useSpring(spreadRaw, {
     stiffness: 140,
     damping: 26,
     mass: 0.6,
   });
 
-  // Reset selection when user scrolls away from the interactive zone
+  // Progress bar: fully visible while filling, fades out as it completes.
+  // Derived from scroll, so it comes back when you scroll up.
+  const progressOpacity = useTransform(scrollYProgress, [0.985, 1], [1, 0]);
+
+  // When the user scrolls out of the interactive zone, go back to the default
+  // selection instead of clearing it. (Same value → React skips the re-render.)
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
     if (latest < 0.2 || latest > 0.95) {
-      setSelectedProject(null);
+      setSelectedProject(DEFAULT_SLUG);
     }
   });
 
@@ -406,44 +407,33 @@ export default function ProjectHighlight() {
         }
       `}</style>
 
-      <div className="sticky top-0 h-[100svh] overflow-hidden">
-        {/* ── Scroll Progress Bar on Top ── */}
-        <div className="absolute top-0 left-0 right-0 z-40 h-1 bg-gray-200/80">
+      {/* ── Scroll Progress Bar – portalled to <body> to escape all stacking contexts ── */}
+      {mounted &&
+        createPortal(
           <motion.div
-            style={{ scaleX: scrollYProgress, transformOrigin: "0%" }}
-            className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"
-          />
-        </div>
+            style={{ opacity: progressOpacity }}
+            className="fixed top-0 left-0 right-0 h-1 z-[9999] pointer-events-none"
+          >
+            <motion.div
+              style={{ scaleX: scrollYProgress, transformOrigin: "0%" }}
+              className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"
+            />
+          </motion.div>,
+          document.body,
+        )}
 
-        {/* ── Quote / Headline ── */}
-        <motion.div
-          style={{ opacity: quoteOpacity, y: quoteY }}
-          className="absolute inset-0 flex items-center px-8 tablet:px-24"
-        >
-          <h2 className="max-w-4xl text-5xl font-black leading-[1.05] tracking-tighter text-gray-900 tablet:text-7xl desktop:text-8xl">
-            Here are some
-            <br />
-            of my work
-            <br />
-            <span className="text-blue-500 drop-shadow-[0_10px_20px_rgba(59,130,246,0.35)]">
-              highlight
-            </span>
-          </h2>
-        </motion.div>
-
+      <div className="sticky top-0 h-[100svh] z-[1000] overflow-hidden">
         {/* ── Film strip + cards layer ── */}
-        <motion.div
-          style={{ opacity: cardsOpacity, y: cardsY, scale: cardsScale }}
-          className="absolute inset-0"
-        >
+        <div className="absolute inset-0">
           {/* Top: film strip + button (pinned to the top, never pushes the cards) */}
           <div
             className={`absolute inset-x-0 top-0 ${
-              mobile ? "px-3 pt-[84px]" : "px-[18px] pt-[18px]"
+              mobile ? "px-3 pt-[84px]" : "px-0 pt-[18px]"
             }`}
             style={mobile ? { bottom: metrics.zone } : undefined}
           >
-            <AnimatePresence mode="wait">
+            {/* initial={false}: children present on mount skip their enter animation */}
+            <AnimatePresence mode="wait" initial={false}>
               {activeProject && (
                 <motion.div
                   key={activeProject.slug}
@@ -453,10 +443,8 @@ export default function ProjectHighlight() {
                   transition={{ duration: 0.4, ease: "easeInOut" }}
                   className={`flex flex-col items-center ${mobile ? "h-full" : ""}`}
                 >
-                  {/* Desktop: left margin clears the side navbar. Phones: the strip fills the space between the menu button and the cards. */}
-                  <div
-                    className={`w-full ${mobile ? "min-h-0 flex-1" : "pl-[70px]"}`}
-                  >
+                  {/* Desktop: full width. Phones: the strip fills the space between the menu button and the cards. */}
+                  <div className={`w-full ${mobile ? "min-h-0 flex-1" : ""}`}>
                     <FilmStrip
                       project={activeProject}
                       gap={metrics.gap}
@@ -466,7 +454,7 @@ export default function ProjectHighlight() {
 
                   <motion.a
                     href={`/works/${activeProject.slug}`}
-                    className={`${mobile ? "mt-3 shrink-0" : "mt-4"} inline-flex items-center gap-2 rounded-md bg-blue-500 px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-blue-600`}
+                    className={`${mobile ? "mt-3 shrink-0" : "mt-4"} inline-flex items-center gap-2  bg-blue-500 px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-blue-600`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.97 }}
                   >
@@ -493,7 +481,7 @@ export default function ProjectHighlight() {
                   bottom: mobile ? -16 : -22,
                   height: mobile ? 52 : 68,
                 }}
-                className="absolute rounded-xl border border-gray-300 bg-gray-50"
+                className="absolute border border-gray-300 bg-gray-50"
               />
               {projects.map((project, idx) => (
                 <ProjectCardUI
@@ -503,18 +491,15 @@ export default function ProjectHighlight() {
                   total={projects.length}
                   spread={spread}
                   isSelected={selectedProject === project.slug}
-                  onClick={() =>
-                    setSelectedProject(
-                      selectedProject === project.slug ? null : project.slug,
-                    )
-                  }
+                  // Always keep one card selected: clicking never deselects
+                  onClick={() => setSelectedProject(project.slug)}
                   fanStyle={fanOffsets[idx] || { rotate: 0, x: 0, y: 0 }}
                   metrics={metrics}
                 />
               ))}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
