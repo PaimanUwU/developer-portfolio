@@ -1,150 +1,207 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { GraduationCap, Briefcase, MapPin, Calendar, ChevronRight } from "lucide-react";
+import { GraduationCap, Briefcase, MapPin, Calendar } from "lucide-react";
 import { aboutData } from "../../data/aboutData";
+import { CornerMarks, Crosshair, dotGridBg } from "../ui/BlueprintElements";
 
 const containerVariants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } },
+  visible: { transition: { staggerChildren: 0.08 } },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } },
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
-type Tab = "education" | "experience";
+// Same horizontal padding as the DevStack header so everything lines up
+const gutter = "px-2 tablet:pl-24 pr-6 tablet:pr-8 desktop:pr-12";
+
+type Tab = "experience" | "education";
+
+const tabs: { id: Tab; label: string; icon: typeof Briefcase }[] = [
+  { id: "experience", label: "Experience", icon: Briefcase },
+  { id: "education", label: "Education", icon: GraduationCap },
+];
 
 export default function AcademicExperience() {
   const [activeTab, setActiveTab] = useState<Tab>("experience");
 
+  // Normalise both data sets into one row shape
+  const rows =
+    activeTab === "education"
+      ? aboutData.education.map((e) => ({
+          title: e.degree,
+          subtitle: e.institution,
+          year: e.year,
+          duration: e.duration,
+          body: null as string | null,
+          status: e.status as string | null,
+        }))
+      : aboutData.work.map((w) => ({
+          title: w.role,
+          subtitle: w.company,
+          year: w.year,
+          duration: w.duration,
+          body: w.description as string | null,
+          status: null as string | null,
+        }));
+
+  const RowIcon = activeTab === "education" ? GraduationCap : Briefcase;
+
   return (
     <motion.section
-      className="w-full px-6 tablet:px-24 py-16 bg-white"
+      className="w-full flex flex-col bg-white border-t border-dashed border-gray-300"
+      style={dotGridBg}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.15 }}
       variants={containerVariants}
     >
-      {/* Header */}
-      <motion.div variants={itemVariants} className="mb-10">
-        <span className="text-xs font-mono font-semibold uppercase tracking-widest text-blue-500 mb-3 block">
-          // background
-        </span>
-        <h2 className="text-5xl tablet:text-7xl font-black tracking-tighter text-gray-900 leading-none">
-          Academic &amp;
-          <br />
-          <span className="text-blue-500 drop-shadow-[0_8px_16px_rgba(59,130,246,0.3)]">
-            Experience
-          </span>
-        </h2>
-      </motion.div>
-
-      {/* Tab Toggle */}
-      <motion.div variants={itemVariants} className="flex gap-1 mb-10 w-fit border border-gray-200 rounded-lg p-1 bg-gray-50">
-        {(["experience", "education"] as Tab[]).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-5 py-2 rounded-md text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 ${
-              activeTab === tab
-                ? "bg-gray-900 text-white shadow-sm"
-                : "text-gray-400 hover:text-gray-700"
-            }`}
+      {/* ── Title Block ─────────────────────────────────────────── */}
+      <motion.div
+        variants={itemVariants}
+        className={`flex flex-col tablet:flex-row tablet:items-end justify-between gap-6 border-b border-dashed border-gray-300 pt-16 pb-10 ${gutter}`}
+      >
+        <div className="flex flex-col gap-1.5">
+          <span
+            className="font-mono text-[11px] text-primary font-bold tracking-[0.25em] uppercase"
+            aria-hidden="true"
           >
-            {tab === "education" ? (
-              <span className="flex items-center gap-2">
-                <GraduationCap size={13} /> Education
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <Briefcase size={13} /> Experience
-              </span>
-            )}
-          </button>
-        ))}
+            DWG-03 · Timeline
+          </span>
+          <h2 className="text-5xl tablet:text-7xl font-black tracking-tighter text-gray-900 leading-none">
+            Academic &amp;
+            <br />
+            Experience
+          </h2>
+        </div>
       </motion.div>
 
-      {/* Timeline Content */}
+      {/* ── Tab bar — styled as blueprint layer toggles ──────── */}
+      <motion.div
+        variants={itemVariants}
+        role="tablist"
+        className="ml-21 pl-2 grid grid-cols-2 tablet:grid-cols-3 border-b border-dashed border-gray-300"
+      >
+        {tabs.map(({ id, label, icon: Icon }, i) => {
+          const isActive = activeTab === id;
+          return (
+            <button
+              key={id}
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => setActiveTab(id)}
+              className={`relative flex items-center gap-2.5 py-5 px-2 border-r border-dashed border-gray-300 text-xs font-mono font-bold transition-colors duration-300 ${
+                i === 0 ? "tablet:pl-2" : "tablet:pl-2"
+              } ${
+                isActive
+                  ? "bg-primary text-white"
+                  : "bg-white text-gray-400 hover:text-gray-900"
+              }`}
+            >
+              {!isActive && (
+                <CornerMarks size={8} className="border-primary/60" />
+              )}
+              <Icon size={14} />
+              <span className="tracking-[0.15em] uppercase">{label}</span>
+            </button>
+          );
+        })}
+        {/* Filler cell keeps the grid line rhythm on wide screens */}
+        <div className="hidden tablet:block" aria-hidden="true" />
+      </motion.div>
+
+      {/* ── Rows ────────────────────────────────────────────────── */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -12 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-          className="relative flex flex-col gap-0"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          exit={{ opacity: 0, transition: { duration: 0.15 } }}
+          className="ml-21 pl-2 flex flex-col"
         >
-          {/* Vertical Line */}
-          <div className="absolute left-5 top-0 bottom-0 w-px bg-gray-100" />
+          {rows.map((row, idx) => (
+            <motion.div
+              key={`${activeTab}-${idx}`}
+              variants={itemVariants}
+              className="group relative grid grid-cols-1 tablet:grid-cols-3 border-b border-dashed border-gray-300 bg-white hover:z-10 cursor-default"
+            >
+              {/* Blueprint registration marks */}
+              <CornerMarks size={12} />
 
-          {(activeTab === "education" ? aboutData.education : aboutData.work).map(
-            (item: any, idx: number) => (
-              <motion.div
-                key={idx}
-                variants={itemVariants}
-                className="relative flex gap-8 pb-10 last:pb-0 group"
-              >
-                {/* Dot */}
-                <div className="relative z-10 flex-shrink-0 mt-1.5">
-                  <div className="w-10 h-10 rounded-full border-2 border-gray-200 bg-white group-hover:border-blue-400 group-hover:bg-blue-50 flex items-center justify-center transition-all duration-300">
-                    {activeTab === "education" ? (
-                      <GraduationCap size={16} className="text-gray-400 group-hover:text-blue-500 transition-colors" />
-                    ) : (
-                      <Briefcase size={16} className="text-gray-400 group-hover:text-blue-500 transition-colors" />
-                    )}
-                  </div>
+              {/* Phase label — architectural phase annotation */}
+              {/* <span */}
+              {/*   className="absolute top-3 right-4 font-mono text-[10px] text-primary font-bold tracking-[0.15em] uppercase select-none pointer-events-none" */}
+              {/*   aria-hidden="true" */}
+              {/* > */}
+              {/*   Phase {String(idx + 1).padStart(2, "0")} */}
+              {/* </span> */}
+
+              {/* Left cell: when & where in time */}
+              <div className="relative flex flex-col gap-4 pt-8 pb-2 tablet:py-10 tablet:pr-8 tablet:border-r border-dashed border-gray-300 transition-colors duration-300 tablet:pl-2">
+                {/* Icon with crosshair target */}
+                <div className="relative w-10 h-10 border border-dashed border-gray-300 flex items-center justify-center transition-colors duration-300">
+                  <Crosshair
+                    size={32}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary/30"
+                  />
+                  <RowIcon
+                    size={18}
+                    strokeWidth={1.75}
+                    className="relative z-[1] text-gray-900 transition-colors duration-300"
+                  />
                 </div>
 
-                {/* Card */}
-                <div className="flex-1 border border-gray-100 rounded-xl p-6 bg-gray-50 hover:bg-white hover:border-blue-100 hover:shadow-lg hover:shadow-blue-400/5 transition-all duration-300">
-                  <div className="flex flex-col tablet:flex-row tablet:items-start justify-between gap-2 mb-3">
-                    <div>
-                      <h3 className="text-base font-black tracking-tight text-gray-900 group-hover:text-blue-600 transition-colors">
-                        {activeTab === "education"
-                          ? (item as typeof aboutData.education[0]).degree
-                          : (item as typeof aboutData.work[0]).role}
-                      </h3>
-                      <p className="text-sm font-mono text-gray-500 mt-0.5">
-                        {activeTab === "education"
-                          ? (item as typeof aboutData.education[0]).institution
-                          : (item as typeof aboutData.work[0]).company}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col items-start tablet:items-end gap-1 flex-shrink-0">
-                      <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-blue-500 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full">
-                        <Calendar size={10} />
-                        {activeTab === "education"
-                          ? (item as typeof aboutData.education[0]).year
-                          : (item as typeof aboutData.work[0]).year}
-                      </span>
-                      <span className="text-[10px] font-mono text-gray-400">
-                        {activeTab === "education"
-                          ? (item as typeof aboutData.education[0]).duration
-                          : (item as typeof aboutData.work[0]).duration}
-                      </span>
-                    </div>
-                  </div>
-
-                  {activeTab === "experience" && (
-                    <p className="text-sm font-mono text-gray-500 leading-relaxed border-t border-gray-100 pt-3 mt-3">
-                      {(item as typeof aboutData.work[0]).description}
-                    </p>
-                  )}
-
-                  {activeTab === "education" && (
-                    <span className="inline-flex items-center gap-1.5 mt-3 text-[10px] font-mono font-bold uppercase tracking-wider text-gray-400 border-t border-gray-100 pt-3 w-full">
-                      <MapPin size={10} />
-                      {(item as typeof aboutData.education[0]).status}
-                    </span>
-                  )}
+                <div className="flex flex-col gap-1">
+                  <span className="inline-flex items-center gap-2 text-sm font-mono font-bold text-gray-900 transition-colors duration-300">
+                    <Calendar size={13} />
+                    {row.year}
+                  </span>
+                  <span className="text-xs font-mono text-gray-400 transition-colors duration-300">
+                    {row.duration}
+                  </span>
                 </div>
-              </motion.div>
-            )
-          )}
+              </div>
+
+              {/* Right cell: what */}
+              <div className="relative tablet:col-span-2 flex flex-col gap-5 px-6 tablet:px-2 pt-4 pb-8 tablet:py-10">
+                <div className="flex flex-col gap-1.5">
+                  <h3 className="text-2xl tablet:text-3xl font-black tracking-tight text-gray-900 transition-colors duration-300">
+                    {row.title}
+                  </h3>
+                  <p className="text-sm font-mono text-gray-500 transition-colors duration-300">
+                    {row.subtitle}
+                  </p>
+                </div>
+
+                {row.body && (
+                  <p className="text-sm font-mono text-gray-500 leading-relaxed max-w-xl transition-colors duration-300">
+                    {row.body}
+                  </p>
+                )}
+
+                {row.status && (
+                  <span className="inline-flex items-center gap-2 w-fit text-xs font-mono text-gray-500 border border-dashed border-gray-300 px-3 py-1 transition-colors duration-300">
+                    <MapPin size={12} />
+                    {row.status}
+                  </span>
+                )}
+              </div>
+            </motion.div>
+          ))}
         </motion.div>
       </AnimatePresence>
+
+      {/* ── Blueprint notes ─────────────────────────────────────── */}
+      {/* <div */}
+      {/*   className={`flex items-center gap-4 py-4 border-t border-dashed border-gray-300 ${gutter}`} */}
+      {/* > */}
+      {/*   <span className="font-mono text-[10px] text-gray-500 font-medium tracking-wider uppercase"> */}
+      {/*     Notes: Timeline entries verified and up to date */}
+      {/*   </span> */}
+      {/* </div> */}
     </motion.section>
   );
 }
