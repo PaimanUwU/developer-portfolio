@@ -7,7 +7,6 @@ import {
   useMotionValueEvent,
   useMotionValue,
   useSpring,
-  useAnimationFrame,
   type MotionValue,
   AnimatePresence,
 } from "framer-motion";
@@ -20,7 +19,7 @@ interface ProjectCard {
   description: string;
   stack: string[];
   status: "halt" | "working" | "finished";
-  images: string[]; // project screenshots (blank white frames when empty)
+  images: string[]; // full-screen backdrop images (placeholder shown when empty)
 }
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -52,42 +51,50 @@ const projects: ProjectCard[] = [
     status: "working",
     images: [],
   },
-  {
-    slug: "uitm-uk-management",
-    title: "UiTM UK Management",
-    description:
-      "A comprehensive management system built for UiTM UK using Oracle 26ai as the primary database.",
-    stack: ["Laravel", "PHP", "Oracle 26ai", "Tailwind CSS"],
-    status: "finished",
-    images: [],
-  },
-  {
-    slug: "infrastructure-reporting",
-    title: "Infrastructure Reporting",
-    description:
-      "A reporting platform to streamline identifying and fixing infrastructure damages at UITMPG.",
-    stack: ["Laravel", "PHP", "MySQL", "Tailwind CSS"],
-    status: "halt",
-    images: [],
-  },
+  // {
+  //   slug: "uitm-uk-management",
+  //   title: "UiTM UK Management",
+  //   description:
+  //     "A comprehensive management system built for UiTM UK using Oracle 26ai as the primary database.",
+  //   stack: ["Laravel", "PHP", "Oracle 26ai", "Tailwind CSS"],
+  //   status: "finished",
+  //   images: [],
+  // },
+  // {
+  //   slug: "infrastructure-reporting",
+  //   title: "Infrastructure Reporting",
+  //   description:
+  //     "A reporting platform to streamline identifying and fixing infrastructure damages at UITMPG.",
+  //   stack: ["Laravel", "PHP", "MySQL", "Tailwind CSS"],
+  //   status: "halt",
+  //   images: [],
+  // },
 ];
 
-// The card that is selected on load (and whenever the user scrolls away and back).
-// Derived so it stays "the middle one" if you add or remove projects.
-const DEFAULT_SLUG = projects[Math.floor(projects.length / 2)].slug;
+// ─── Timing ───────────────────────────────────────────────────────────────────
+const FADE_SECONDS = 0.8; // crossfade between images / projects
+const SLIDE_INTERVAL_MS = 4500; // time each image stays before the next fades in
+
+// ─── Scroll length ────────────────────────────────────────────────────────────
+const SECTION_VH = 300; // total section height; scroll distance = this minus 100
+const SPREAD_START = 0.1; // progress where the cards start leaving the pile
+const SPREAD_END = 0.55; // progress where the fan is complete
+const EXIT_START = 0.95; // past this the selection clears again
 
 // ─── Fan layout ───────────────────────────────────────────────────────────────
-// The outer cards sit lower than the middle one; the selected card lifts up.
-const fanOffsets = [
-  { rotate: -8, x: 0, y: 24 },
-  { rotate: -4, x: 0, y: 4 },
-  { rotate: 0, x: 0, y: 0 },
-  { rotate: 4, x: 0, y: 4 },
-  { rotate: 8, x: 0, y: 24 },
-];
+// The outermost cards always tilt/drop by the same amount; the cards in between
+// share that arc evenly, so the fan adapts to however many projects there are.
+const MAX_TILT = 8; // rotation (deg) of the outermost cards
+const MAX_DROP = 24; // how far (px) the outermost cards sit below the middle
+
+function getFanStyle(index: number, total: number) {
+  const half = (total - 1) / 2;
+  if (half === 0) return { rotate: 0, x: 0, y: 0 }; // a single card stays flat
+  const t = (index - half) / half; // -1 = leftmost, 0 = middle, 1 = rightmost
+  return { rotate: t * MAX_TILT, x: 0, y: t * t * MAX_DROP };
+}
 
 // ─── Responsive sizing ────────────────────────────────────────────────────────
-// Below 768px the cards shrink and overlap more so the whole fan fits the screen.
 const MOBILE_MAX = 767;
 
 interface Metrics {
@@ -95,35 +102,25 @@ interface Metrics {
   cardW: number; // card width in px (height follows the 2:3 aspect ratio)
   step: number; // distance between card centres in the fan
   lift: number; // how far the selected card rises
-  gap: number; // film strip padding + gap between frames
-  zone: number; // phones: height reserved at the bottom for the card fan
 }
 
-function getMetrics(w: number): Metrics {
-  if (w > MOBILE_MAX)
-    return { mobile: false, cardW: 176, step: 160, lift: 48, gap: 18, zone: 0 };
+function getMetrics(w: number, total: number): Metrics {
+  if (w > MOBILE_MAX) return { mobile: false, cardW: 176, step: 160, lift: 48 };
   const cardW = 128;
-  // Fit five cards into the width with a 16px margin each side
+  // Fit every card into the width with a 16px margin each side
+  const gaps = Math.max(1, total - 1);
   const step = Math.round(
-    Math.min(cardW - 16, Math.max(36, (w - 32 - cardW) / 4)),
+    Math.min(cardW - 16, Math.max(36, (w - 32 - cardW) / gaps)),
   );
-  // fan = bottom padding 32 + card height + lift + 16 breathing room
-  return {
-    mobile: true,
-    cardW,
-    step,
-    lift: 36,
-    gap: 12,
-    zone: 32 + Math.round(cardW * 1.5) + 36 + 16,
-  };
+  return { mobile: true, cardW, step, lift: 36 };
 }
 
-function useMetrics(): Metrics {
-  const [m, setM] = useState<Metrics>(() => getMetrics(1280));
+function useMetrics(total: number): Metrics {
+  const [m, setM] = useState<Metrics>(() => getMetrics(1280, total));
   useEffect(() => {
     const update = () =>
       setM((prev) => {
-        const next = getMetrics(window.innerWidth);
+        const next = getMetrics(window.innerWidth, total);
         return prev.mobile === next.mobile &&
           prev.cardW === next.cardW &&
           prev.step === next.step
@@ -133,107 +130,62 @@ function useMetrics(): Metrics {
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, []);
+  }, [total]);
   return m;
 }
 
-// ─── Film strip (dark band with white frames, auto-scrolling forever) ────────
-const STRIP_SPEED = 60; // px per second
+// ─── Full-screen backdrop (images crossfade into each other) ─────────────────
+function Backdrop({ project }: { project: ProjectCard }) {
+  const { images, slug, title } = project;
+  const [i, setI] = useState(0);
 
-function FilmStrip({
-  project,
-  gap,
-  vertical,
-}: {
-  project: ProjectCard;
-  gap: number;
-  vertical: boolean; // phones: frames stack and scroll upward, filling the height
-}) {
-  const base: (string | null)[] =
-    project.images.length > 0 ? project.images : [null, null, null, null];
-
-  // Each set has at least 4 frames so it is always longer than the visible window
-  const set = Array.from(
-    { length: Math.max(4, base.length) },
-    (_, i) => base[i % base.length],
-  );
-  const copies = [0, 1, 2];
-
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const setRef = useRef<HTMLDivElement>(null);
-  const setSize = useRef(0);
-  const paused = useRef(false);
-
-  // Track the length of one full set of frames (width or height depending on direction)
+  // Restart on project change, then cycle through its images
   useEffect(() => {
-    x.set(0);
-    y.set(0);
-    const el = setRef.current;
-    if (!el) return;
-    const measure = () => {
-      setSize.current = vertical ? el.offsetHeight : el.offsetWidth;
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [vertical, x, y]);
-
-  // Move every frame; once one set has passed, jump back by exactly one set
-  useAnimationFrame((_, delta) => {
-    if (paused.current || !setSize.current) return;
-    const mv = vertical ? y : x;
-    let next = mv.get() - (STRIP_SPEED * Math.min(delta, 64)) / 1000;
-    if (next <= -setSize.current) next += setSize.current;
-    mv.set(next);
-  });
+    setI(0);
+    if (images.length < 2) return;
+    const id = setInterval(
+      () => setI((prev) => (prev + 1) % images.length),
+      SLIDE_INTERVAL_MS,
+    );
+    return () => clearInterval(id);
+  }, [slug, images.length]);
 
   return (
-    <div
-      className={`w-full overflow-hidden  bg-[#151d20] ${vertical ? "h-full" : ""}`}
-      style={vertical ? { padding: gap } : { paddingBlock: gap }}
-    >
-      {/* Clip window: frames disappear at the padding edge, like film */}
-      <div
-        className={`overflow-hidden ${vertical ? "h-full" : ""}`}
-        onMouseEnter={() => (paused.current = true)}
-        onMouseLeave={() => (paused.current = false)}
-      >
+    <div className="absolute inset-0 bg-[#151d20]">
+      <AnimatePresence initial={false}>
+        {/* The new slide fades in on top; the old one stays fully opaque
+            underneath until the fade is done, then is removed (no dip). */}
         <motion.div
-          style={vertical ? { y } : { x }}
-          className={`flex will-change-transform ${vertical ? "w-full flex-col" : "w-max"}`}
+          key={`${slug}-${i}`}
+          className="absolute inset-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{
+            opacity: 0,
+            transition: { delay: FADE_SECONDS, duration: 0.01 },
+          }}
+          transition={{ duration: FADE_SECONDS, ease: "easeInOut" }}
         >
-          {copies.map((c) => (
-            <div
-              key={c}
-              ref={c === 0 ? setRef : undefined}
-              aria-hidden={c > 0}
-              className={`flex flex-none ${vertical ? "w-full flex-col" : ""}`}
-            >
-              {set.map((src, idx) => (
-                <div
-                  key={idx}
-                  className="film-frame aspect-video flex-none overflow-hidden  bg-white"
-                  style={
-                    vertical
-                      ? { width: "100%", marginBottom: gap }
-                      : { marginRight: gap }
-                  }
-                >
-                  {src && (
-                    <img
-                      src={src}
-                      alt={`${project.title} screenshot ${(idx % base.length) + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                  )}
-                </div>
-              ))}
+          {images.length > 0 ? (
+            <img
+              src={images[i % images.length]}
+              alt={`${title} screenshot ${(i % images.length) + 1}`}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            // Placeholder until real screenshots are added
+            <div className="flex h-full w-full items-center justify-center bg-neutral-100">
+              <span className="px-6 text-center text-4xl font-bold tracking-tight text-neutral-300 md:text-7xl">
+                {title}
+              </span>
             </div>
-          ))}
+          )}
         </motion.div>
-      </div>
+      </AnimatePresence>
+
+      {/* Keep the menu button (top) and the cards (bottom) readable over any image */}
+      {/* <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/40 to-transparent" /> */}
+      {/* <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/50 to-transparent" /> */}
     </div>
   );
 }
@@ -289,8 +241,6 @@ function ProjectCardUI({
     >
       <motion.div
         layout
-        // Render in the current state on mount: no lift animation for the
-        // pre-selected card on first paint.
         initial={false}
         onClick={onClick}
         style={{ width: cardW }}
@@ -313,14 +263,12 @@ function ProjectCardUI({
         }
         transition={{ duration: 0.35, ease: "easeOut" }}
       >
-        {/* Inner face (the darker rim around it is the card's shell) */}
-        <div className="flex h-full flex-col justify-between  bg-[#1c2427] p-1.5 text-white">
-          {/* Top: stack chips */}
+        <div className="flex h-full flex-col justify-between bg-[#1c2427] p-1.5 text-white">
           <div className="flex flex-wrap content-start gap-x-1.5 gap-y-2">
             {project.stack.slice(0, 3).map((tech) => (
               <span
                 key={tech}
-                className=" border border-white/20 bg-white/5 px-1.5 py-1 text-[9px] leading-[14px] text-gray-400"
+                className="border border-white/20 bg-white/5 px-1.5 py-1 text-[9px] leading-[14px] text-gray-400"
               >
                 {tech}
               </span>
@@ -332,7 +280,6 @@ function ProjectCardUI({
             )}
           </div>
 
-          {/* Bottom: title + description */}
           <div className="flex flex-col gap-2">
             <h3 className="text-[14px] font-bold leading-tight tracking-tight">
               {project.title}
@@ -342,41 +289,97 @@ function ProjectCardUI({
             </p>
           </div>
         </div>
+
+        {/* View Project: sits on top of the selected card and moves with it.
+            The wrapper does the positioning so Framer's scale on the link
+            doesn't fight Tailwind's translate. */}
+        <AnimatePresence>
+          {isSelected && (
+            <div className="absolute inset-x-0 bottom-full mb-4 flex justify-center">
+              <motion.a
+                href={`/works/${project.slug}`}
+                // Clicking the button must not toggle the card underneath it
+                onClick={(e) => e.stopPropagation()}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+                className="inline-flex items-center gap-2 whitespace-nowrap bg-blue-500 px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-blue-600"
+              >
+                View Project
+                <ExternalLink size={12} />
+              </motion.a>
+            </div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </motion.div>
+  );
+}
+
+// ─── Intro (shown while no card is selected) ─────────────────────────────────
+// "pick a card" starts as a tight phrase and stretches to the full width as you
+// scroll. The words sit in a flex row with justify-between, so the gap between
+// each pair of words is always equal.
+function Intro({ progress }: { progress: MotionValue<number> }) {
+  // Finishes at the same point the cards finish fanning out
+  const width = useTransform(progress, [0.01, SPREAD_END], ["0%", "100%"]);
+
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0">
+      <div className="tablet:px-10 pt-20 tablet:pt-6">
+        <h2
+          className="font-display font-bold leading-[0.9] tracking-tight text-black"
+          style={{ fontSize: "clamp(4rem, 5vw, 9rem)" }}
+        >
+          Project Highlight
+        </h2>
+      </div>
+
+      {/* width 0% + min-width: max-content = the natural phrase width at the
+          start of the scroll, then it grows to 100% */}
+      <motion.div
+        style={{
+          width,
+          minWidth: "max-content",
+          fontSize: "clamp(4rem, 5vw, 9rem)",
+        }}
+        className="flex justify-between gap-2 tablet:px-10 text-base tablet:text-lg leading-[0.9] font-display font-bold text-black"
+      >
+        <span>pick</span>
+        <span>a</span>
+        <span>card</span>
+      </motion.div>
+    </div>
   );
 }
 
 // ─── Main Section ─────────────────────────────────────────────────────────────
 export default function ProjectHighlight() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const metrics = useMetrics();
+  const metrics = useMetrics(projects.length);
   const { mobile } = metrics;
 
   // Gate portal rendering to client-side only
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // Pre-selected on load, so the film strip is already showing.
-  // A static initial value keeps server HTML and client HTML identical.
-  const [selectedProject, setSelectedProject] = useState<string>(DEFAULT_SLUG);
+  // Nothing is selected until the user clicks a card
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
 
-  // Phase mapping across scroll progress:
-  //  0.00 – 0.32  →  Cards + film strip already visible (pile, middle card selected)
-  //  0.32 – 0.50  →  Cards spread from the pile into the fan
-  //  0.50 – 0.95  →  Interactive zone
-  //  0.95 – 1.00  →  Exit
-
-  // The cards layer is visible from the first frame (no fade/slide/scale-in),
-  // so the pre-selected film strip is there as soon as the section appears.
-
   // Cards first sit as one pile, then spread into the fan as you keep scrolling
-  const spreadRaw = useTransform(scrollYProgress, [0.12, 0.2], [0, 1]);
+  const spreadRaw = useTransform(
+    scrollYProgress,
+    [SPREAD_START, SPREAD_END],
+    [0, 1],
+  );
   const spread = useSpring(spreadRaw, {
     stiffness: 140,
     damping: 26,
@@ -384,29 +387,28 @@ export default function ProjectHighlight() {
   });
 
   // Progress bar: fully visible while filling, fades out as it completes.
-  // Derived from scroll, so it comes back when you scroll up.
   const progressOpacity = useTransform(scrollYProgress, [0.985, 1], [1, 0]);
 
-  // When the user scrolls out of the interactive zone, go back to the default
-  // selection instead of clearing it. (Same value → React skips the re-render.)
+  // Scrolling out of the interactive zone clears the selection
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    if (latest < 0.2 || latest > 0.95) {
-      setSelectedProject(DEFAULT_SLUG);
+    if (latest < SPREAD_END || latest > EXIT_START) {
+      setSelectedProject(null);
     }
   });
 
   const activeProject = projects.find((p) => p.slug === selectedProject);
 
-  return (
-    <div ref={containerRef} className="relative h-[450vh]">
-      {/* Film strip frame size */}
-      <style>{`
-        .film-frame {
-          /* 45vw wide, but shrinks on short screens so it never hits the cards */
-          width: max(240px, min(45vw, calc((100svh - 475px) * 16 / 9)));
-        }
-      `}</style>
+  // Remember the last project so the backdrop can fade out (instead of
+  // vanishing) when the selection is cleared.
+  const lastProject = useRef<ProjectCard>(projects[0]);
+  if (activeProject) lastProject.current = activeProject;
 
+  return (
+    <div
+      ref={containerRef}
+      className="relative"
+      style={{ height: `${SECTION_VH}vh` }}
+    >
       {/* ── Scroll Progress Bar – portalled to <body> to escape all stacking contexts ── */}
       {mounted &&
         createPortal(
@@ -423,81 +425,54 @@ export default function ProjectHighlight() {
         )}
 
       <div className="sticky top-0 h-[100svh] z-[1000] overflow-hidden">
-        {/* ── Film strip + cards layer ── */}
-        <div className="absolute inset-0">
-          {/* Top: film strip + button (pinned to the top, never pushes the cards) */}
-          <div
-            className={`absolute inset-x-0 top-0 ${
-              mobile ? "px-3 pt-[84px]" : "px-0 pt-[18px]"
-            }`}
-            style={mobile ? { bottom: metrics.zone } : undefined}
-          >
-            {/* initial={false}: children present on mount skip their enter animation */}
-            <AnimatePresence mode="wait" initial={false}>
-              {activeProject && (
-                <motion.div
-                  key={activeProject.slug}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.4, ease: "easeInOut" }}
-                  className={`flex flex-col items-center ${mobile ? "h-full" : ""}`}
-                >
-                  {/* Desktop: full width. Phones: the strip fills the space between the menu button and the cards. */}
-                  <div className={`w-full ${mobile ? "min-h-0 flex-1" : ""}`}>
-                    <FilmStrip
-                      project={activeProject}
-                      gap={metrics.gap}
-                      vertical={mobile}
-                    />
-                  </div>
+        {/* ── Heading + hint: visible when nothing is selected ── */}
+        <Intro progress={scrollYProgress} />
 
-                  <motion.a
-                    href={`/works/${activeProject.slug}`}
-                    className={`${mobile ? "mt-3 shrink-0" : "mt-4"} inline-flex items-center gap-2  bg-blue-500 px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-blue-600`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    View Project
-                    <ExternalLink size={12} />
-                  </motion.a>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+        {/* ── Full-screen backdrop (covers the intro once a card is picked) ── */}
+        <motion.div
+          className="pointer-events-none absolute inset-0"
+          initial={false}
+          animate={{ opacity: activeProject ? 1 : 0 }}
+          transition={{ duration: FADE_SECONDS, ease: "easeInOut" }}
+        >
+          <Backdrop project={lastProject.current} />
+        </motion.div>
 
-          {/* Bottom: card fan, always pinned to the bottom */}
-          <div
-            className={`absolute inset-x-0 bottom-0 flex justify-center ${mobile ? "pb-8" : "pb-10"}`}
-          >
-            <div className="relative flex">
-              {/* Tray the cards sit in */}
-              <motion.div
-                aria-hidden
-                style={{
-                  opacity: spread,
-                  left: mobile ? -10 : -40,
-                  right: mobile ? -10 : -40,
-                  bottom: mobile ? -16 : -22,
-                  height: mobile ? 52 : 68,
-                }}
-                className="absolute border border-gray-300 bg-gray-50"
+        {/* ── Card fan, pinned to the bottom ── */}
+        <div
+          className={`absolute inset-x-0 bottom-0 flex justify-center ${mobile ? "pb-8" : "pb-10"}`}
+        >
+          <div className="relative flex">
+            {/* Tray the cards sit in */}
+            <motion.div
+              aria-hidden
+              style={{
+                opacity: spread,
+                left: mobile ? -10 : -40,
+                right: mobile ? -10 : -40,
+                bottom: mobile ? -16 : -22,
+                height: mobile ? 52 : 68,
+              }}
+              className="absolute border border-gray-300 bg-gray-50"
+            />
+            {projects.map((project, idx) => (
+              <ProjectCardUI
+                key={project.slug}
+                project={project}
+                index={idx}
+                total={projects.length}
+                spread={spread}
+                isSelected={selectedProject === project.slug}
+                // Clicking the selected card again deselects it
+                onClick={() =>
+                  setSelectedProject((cur) =>
+                    cur === project.slug ? null : project.slug,
+                  )
+                }
+                fanStyle={getFanStyle(idx, projects.length)}
+                metrics={metrics}
               />
-              {projects.map((project, idx) => (
-                <ProjectCardUI
-                  key={project.slug}
-                  project={project}
-                  index={idx}
-                  total={projects.length}
-                  spread={spread}
-                  isSelected={selectedProject === project.slug}
-                  // Always keep one card selected: clicking never deselects
-                  onClick={() => setSelectedProject(project.slug)}
-                  fanStyle={fanOffsets[idx] || { rotate: 0, x: 0, y: 0 }}
-                  metrics={metrics}
-                />
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       </div>

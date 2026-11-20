@@ -1,6 +1,4 @@
-import React from "react";
 import { motion } from "framer-motion";
-import { aboutData } from "../../data/aboutData.ts";
 import { CornerMarks, Crosshair, dotGridBg } from "../ui/BlueprintElements";
 
 // Tech name -> simple-icons slug
@@ -17,23 +15,34 @@ const techSlugs: Record<string, string> = {
   Docker: "docker",
   "Framer Motion": "framer",
   Rust: "rust",
-  // Zsh: "zsh",
   Tmux: "tmux",
   Git: "git",
   "Node.js": "nodedotjs",
 };
 
-// Resting icons are near-black; the hover tile shows them in white.
+const frameworks = ["Astro", "Laravel"];
+const libraries = [
+  "TypeScript",
+  "Rust",
+  "React",
+  "TailwindCSS",
+  "Framer Motion",
+];
+const tools = [
+  "Neovim",
+  "MacOS",
+  "Arch Linux",
+  "Docker",
+  "Tmux",
+  "Git",
+  "Figma",
+  "Node.js",
+];
+
+const COLS = 3;
+
 const iconUrl = (slug: string, color: string) =>
   `https://cdn.simpleicons.org/${slug}/${color}`;
-
-// Deduplicate the tech stack
-const uniqueStack = Array.from(new Set(aboutData.techStack));
-
-// The first N items get the big cells on the top row
-const FEATURED_COUNT = 3;
-const featured = uniqueStack.slice(0, FEATURED_COUNT);
-const rest = uniqueStack.slice(FEATURED_COUNT);
 
 const containerVariants = {
   hidden: {},
@@ -45,35 +54,28 @@ const itemVariants = {
   visible: { opacity: 1, transition: { duration: 0.3, ease: "easeOut" } },
 };
 
-/** Generate blueprint-style grid reference (A.01, A.02, B.01 …) */
-const getRef = (index: number, cols: number) => {
-  const row = String.fromCharCode(65 + Math.floor(index / cols));
-  const col = String((index % cols) + 1).padStart(2, "0");
-  return `${row}.${col}`;
-};
-
 type CellProps = {
   tech: string;
   size: "large" | "small";
   refLabel: string;
+  className?: string;
 };
 
-const StackCell = ({ tech, size, refLabel }: CellProps) => {
+const StackCell = ({ tech, size, refLabel, className = "" }: CellProps) => {
   const slug = techSlugs[tech];
   const isLarge = size === "large";
+  const iconSize = isLarge
+    ? "w-16 h-16 tablet:w-24 tablet:h-24"
+    : "w-7 h-7 tablet:w-9 tablet:h-9";
 
   return (
     <motion.div
       variants={itemVariants}
       title={tech}
-      className={`group relative flex items-center justify-center border-r border-t border-dashed border-gray-300 bg-white hover:z-10 cursor-default ${
-        isLarge ? "h-40 tablet:h-64" : "h-24 tablet:h-32"
-      }`}
+      className={`group relative flex items-center justify-center border-gray-200 bg-white hover:z-10 cursor-default ${className}`}
     >
-      {/* Blueprint registration marks */}
       <CornerMarks size={isLarge ? 14 : 9} />
 
-      {/* Grid reference */}
       <span
         className="absolute top-1.5 left-2 font-mono text-[9px] text-primary font-medium tracking-[0.15em] select-none pointer-events-none"
         aria-hidden="true"
@@ -81,22 +83,16 @@ const StackCell = ({ tech, size, refLabel }: CellProps) => {
         {refLabel}
       </span>
 
-      {/* Crosshair target */}
       <Crosshair
-        size={isLarge ? 80 : 44}
+        size={isLarge ? 120 : 44}
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary/30 transition-opacity duration-300 group-hover:opacity-0"
       />
 
-      {/* Resting state: quiet monochrome logo */}
       {slug ? (
         <img
           src={iconUrl(slug, "171717")}
           alt={tech}
-          className={`object-contain opacity-80 transition-opacity duration-300 group-hover:opacity-0 ${
-            isLarge
-              ? "w-12 h-12 tablet:w-16 tablet:h-16"
-              : "w-7 h-7 tablet:w-9 tablet:h-9"
-          }`}
+          className={`object-contain opacity-80 transition-opacity duration-300 group-hover:opacity-0 ${iconSize}`}
         />
       ) : (
         <span className="font-mono text-xs text-gray-700 transition-opacity duration-300 group-hover:opacity-0">
@@ -104,7 +100,7 @@ const StackCell = ({ tech, size, refLabel }: CellProps) => {
         </span>
       )}
 
-      {/* Hover state: dark tile that slides in */}
+      {/* Hover tile */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-primary opacity-0 scale-95 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:scale-100 motion-reduce:transition-none"
@@ -113,14 +109,14 @@ const StackCell = ({ tech, size, refLabel }: CellProps) => {
           <img
             src={iconUrl(slug, "ffffff")}
             alt=""
-            className={`object-contain ${
-              isLarge
-                ? "w-12 h-12 tablet:w-16 tablet:h-16"
-                : "w-7 h-7 tablet:w-9 tablet:h-9"
-            }`}
+            className={`object-contain ${iconSize}`}
           />
         )}
-        <span className="font-mono text-[10px] tablet:text-xs text-white font-medium truncate max-w-full px-2">
+        <span
+          className={`font-mono text-white font-medium truncate max-w-full px-2 ${
+            isLarge ? "text-sm tablet:text-base" : "text-[10px] tablet:text-xs"
+          }`}
+        >
           {tech}
         </span>
       </div>
@@ -128,75 +124,120 @@ const StackCell = ({ tech, size, refLabel }: CellProps) => {
   );
 };
 
-const DevStack = () => {
+/** Section label row, same treatment as the stats labels in Hero */
+const SectionLabel = ({ code, title }: { code: string; title: string }) => (
+  <div className="flex items-center justify-between px-5 tablet:px-8 py-3 border-b border-gray-200 bg-white">
+    <span className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">
+      {code}
+    </span>
+    <span className="font-mono text-[10px] uppercase tracking-widest text-gray-400">
+      {title}
+    </span>
+  </div>
+);
+
+/** Grid of small cells, padded with dot-grid fillers so rows stay complete */
+const SmallGrid = ({ items, prefix }: { items: string[]; prefix: string }) => {
+  const filler = (COLS - (items.length % COLS)) % COLS;
+
   return (
     <motion.div
-      className="w-full mx-auto flex flex-col z-10 pt-8 border-t border-dashed border-gray-300 bg-white"
+      className="grid grid-cols-3"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {items.map((tech, i) => (
+        <StackCell
+          key={tech}
+          tech={tech}
+          size="small"
+          refLabel={`${prefix}.${String(i + 1).padStart(2, "0")}`}
+          className="h-24 tablet:h-32 border-b border-r [&:nth-child(3n)]:border-r-0"
+        />
+      ))}
+      {Array.from({ length: filler }).map((_, i) => (
+        <div
+          key={`filler-${i}`}
+          aria-hidden="true"
+          className="h-24 tablet:h-32 border-b border-gray-200 border-r [&:last-child]:border-r-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, #d1d5db 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }}
+        />
+      ))}
+    </motion.div>
+  );
+};
+
+const DevStack = () => {
+  return (
+    <motion.section
+      className="w-full border-t border-gray-200 bg-white"
       style={dotGridBg}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut", delay: 0.4 }}
     >
-      {/* ── Title Block ─────────────────────────────────────────── */}
-      <div className="flex flex-col tablet:flex-row tablet:items-end justify-between border-b border-dashed border-gray-300 px-6 tablet:pl-24 pr-6 tablet:pr-8 desktop:pr-12 pt-8 pb-10">
-        <div className="flex flex-col gap-1.5">
-          <span
-            className="font-mono text-[11px] text-primary font-bold tracking-[0.25em] uppercase"
-            aria-hidden="true"
+      <div className="grid grid-cols-1 desktop:grid-cols-2">
+        {/* ════════ LEFT PANEL: frameworks ════════ */}
+        <div className="flex flex-col border-b desktop:border-b-0 desktop:border-r border-gray-200">
+          {/* Title block */}
+          <div className="flex flex-col gap-1.5 px-8 tablet:px-14 pt-16 pb-10 border-b border-gray-200 bg-white">
+            <span
+              className="font-mono text-[11px] text-primary font-bold tracking-[0.25em] uppercase"
+              aria-hidden="true"
+            >
+              DWG-01 · Tools &amp; Stack
+            </span>
+            <h2 className="text-5xl tablet:text-7xl font-black tracking-tighter text-gray-900 leading-none">
+              The tools I use
+            </h2>
+          </div>
+
+          <SectionLabel code="A" title="Frameworks" />
+
+          {/* Two big rectangles */}
+          <motion.div
+            className="flex flex-1 flex-col"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
           >
-            DWG-01 · Tools &amp; Stack
-          </span>
-          <h2 className="text-5xl tablet:text-7xl font-black tracking-tighter text-gray-900 leading-none">
-            The tools I use
-          </h2>
+            {frameworks.map((tech, i) => (
+              <StackCell
+                key={tech}
+                tech={tech}
+                size="large"
+                refLabel={`A.${String(i + 1).padStart(2, "0")}`}
+                className="flex-1 min-h-[14rem] tablet:min-h-[18rem] border-b last:border-b-0"
+              />
+            ))}
+          </motion.div>
+        </div>
+
+        {/* ════════ RIGHT PANEL: libraries + tools ════════ */}
+        <div className="flex flex-col">
+          <SectionLabel code="B" title="Libraries" />
+          <SmallGrid items={libraries} prefix="B" />
+
+          <SectionLabel code="C" title="Tools" />
+          <SmallGrid items={tools} prefix="C" />
+
+          {/* Dot-grid filler, same as Hero's bottom-right area */}
+          <div
+            className="flex-1 min-h-[2rem]"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, #d1d5db 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+            }}
+          />
         </div>
       </div>
-
-      {/* ── Featured row: 3 large cells ─────────────────────────── */}
-      {featured.length > 0 && (
-        <motion.div
-          className="tablet:pl-23 grid grid-cols-3"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {featured.map((tech, i) => (
-            <StackCell
-              key={tech}
-              tech={tech}
-              size="large"
-              refLabel={getRef(i, 3)}
-            />
-          ))}
-        </motion.div>
-      )}
-
-      {/* ── Rest: dense grid of small cells ─────────────────────── */}
-      {rest.length > 0 && (
-        <motion.div
-          className="tablet:pl-23 grid grid-cols-3 tablet:grid-cols-4 desktop:grid-cols-6"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {rest.map((tech, i) => (
-            <StackCell
-              key={tech}
-              tech={tech}
-              size="small"
-              refLabel={getRef(i + FEATURED_COUNT, 6)}
-            />
-          ))}
-        </motion.div>
-      )}
-
-      {/* ── Blueprint notes ─────────────────────────────────────── */}
-      {/* <div className="flex items-center gap-4 px-6 tablet:pl-24 py-4 border-t border-dashed border-gray-300"> */}
-      {/*   <span className="font-mono text-[10px] text-gray-500 font-medium tracking-wider uppercase"> */}
-      {/*     Notes: All tools actively used in production workflows */}
-      {/*   </span> */}
-      {/* </div> */}
-    </motion.div>
+    </motion.section>
   );
 };
 

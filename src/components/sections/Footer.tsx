@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { Cpu, Globe, Blocks } from "lucide-react";
 import { aboutData } from "../../data/aboutData";
 
-export default function Footer() {
-  const currentYear = new Date().getFullYear();
+const chip =
+  "px-1.5 py-0.5 text-xs font-mono text-gray-500 rounded transition-all duration-200 hover:bg-gray-900 hover:text-white cursor-default";
 
+const heading =
+  "px-8 py-4 border-b border-gray-200 text-sm font-display uppercase tracking-widest text-gray-900";
+
+export default function Footer() {
   const [randoms] = useState(() => {
     const chars =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
@@ -14,112 +18,89 @@ export default function Footer() {
   });
 
   return (
-    <footer className="border-t border-gray-200 bg-gray-50 relative w-full desktop:py-16 ">
-      <div className="desktop:pl-2 ml-23 max-w-[94vw] grid grid-cols-1 desktop:grid-cols-12 gap-12">
-        {/* Brand & Status Column */}
-        <div className="tablet:col-span-7 gap-10 flex flex-col pt-8 pb-4 desktop:pt-0">
-          <div>
-            <h2 className="desktop:-translate-y-10 translate-y-4 text-5xl tablet:text-9xl font-bold text-gray-900 tracking-tighter ">
+    <footer className="relative w-full border-t border-gray-200 bg-gray-50">
+      <div>
+        {/* ── Main grid ── */}
+        <div className="grid grid-cols-1 desktop:grid-cols-12">
+          {/* Brand column */}
+          <div className="desktop:col-span-7 flex flex-col px-8 tablet:px-14 pt-16 pb-10 border-b desktop:border-b-0 desktop:border-r border-gray-200">
+            <h2 className="text-5xl tablet:text-9xl font-bold text-gray-900 tracking-tighter leading-none">
               paimanuwu
               <span className="ml-2 text-blue-500 text-xl tablet:text-2xl tracking-normal">
                 .dev
               </span>
             </h2>
           </div>
-        </div>
 
-        {/* Links Column */}
-        <div className="tablet:col-span-2 flex flex-col gap-4">
-          <h3 className="text-sm font-bold uppercase tracking-widest text-gray-900">
-            Connect
-          </h3>
-          <div className="flex flex-col gap-1 items-start">
-            {aboutData.socials.map((social) => (
-              <a
-                key={social.name}
-                href={social.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-2 py-0.5 -ml-2 text-xs font-mono text-gray-500 rounded transition-all duration-200 hover:bg-gray-900 hover:text-white flex items-center gap-2 group"
-              >
-                {/* Subtle indicator that only shows on hover */}
-                <span className="opacity-0 hidden group-hover:opacity-100 group-hover:flex transition-opacity">
-                  →
-                </span>
-                {social.name}
-              </a>
-            ))}
+          {/* Links column */}
+          <div className="desktop:col-span-2 flex flex-col border-b desktop:border-b-0 desktop:border-r border-gray-200">
+            <h3 className={heading}>Connect</h3>
+            <div className="flex flex-col gap-1 items-start px-8 py-8">
+              {aboutData.socials.map((social) => (
+                <a
+                  key={social.name}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group px-2 py-0.5 -ml-2 text-xs font-mono text-gray-500 rounded transition-all duration-200 hover:bg-gray-900 hover:text-white flex items-center gap-2"
+                >
+                  <span className="opacity-0 hidden group-hover:opacity-100 group-hover:flex transition-opacity">
+                    →
+                  </span>
+                  {social.name}
+                </a>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* System Info Column */}
-        <div className="tablet:col-span-3 flex flex-col gap-4">
-          <h3 className="text-sm font-bold uppercase tracking-widest text-gray-900">
-            System Info
-          </h3>
+          {/* System info column */}
+          <div className="desktop:col-span-3 flex flex-col">
+            <h3 className={heading}>System Info</h3>
+            <div className="flex flex-col gap-3 px-8 py-8">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-xs text-gray-900 font-bold">
+                  <Cpu size={14} /> OS:
+                </div>
+                <div className="flex gap-1">
+                  {["MacOS", "Arch Linux"].map((os) => (
+                    <span key={os} className={chip}>
+                      {os}
+                    </span>
+                  ))}
+                </div>
+              </div>
 
-          <div className="grid grid-cols-1 gap-y-3">
-            <div className="py-0.5 flex items-center gap-2">
-              <div class=" flex items-center gap-2 text-xs text-gray-900 font-bold">
-                <Cpu size={14} /> OS:
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-xs text-gray-900 font-bold">
+                  <Globe size={14} /> Loc:
+                </div>
+                <span className={chip}>Malaysia</span>
               </div>
-              <div className="flex gap-1">
-                {["MacOS", "Arch Linux"].map((os) => (
-                  <span
-                    key={os}
-                    className="px-1.5 py-0.5 text-xs font-mono text-gray-500 rounded transition-all duration-200 hover:bg-gray-900 hover:text-white cursor-default"
-                  >
-                    {os}
-                  </span>
-                ))}
-              </div>
-            </div>
 
-            <div className="py-0.5 flex items-center gap-2">
-              <div class=" flex items-center gap-2 text-xs text-gray-900 font-bold">
-                <Globe size={14} /> Loc:
-              </div>
-              <span className="px-1.5 py-0.5 text-xs font-mono text-gray-500 rounded transition-all duration-200 hover:bg-gray-900 hover:text-white cursor-default">
-                Malaysia
-              </span>
-            </div>
-
-            <div className="flex flex-row items-start gap-1 mt-1">
-              <div className="py-0.5 flex items-center gap-2 text-xs text-gray-900 font-bold group w-fit">
-                <Blocks size={14} />
-                <span className="text-xs text-gray-900 font-bold">Tech:</span>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {aboutData.techStack.map((tech, index) => (
-                  <span
-                    key={index}
-                    className="px-1.5 py-0.5 text-xs font-mono text-gray-500 rounded transition-all duration-200 hover:bg-gray-900 hover:text-white cursor-default"
-                  >
-                    {tech}
-                  </span>
-                ))}
+              <div className="flex items-start gap-1 mt-1">
+                <div className="py-0.5 flex items-center gap-2 text-xs text-gray-900 font-bold w-fit">
+                  <Blocks size={14} /> Tech:
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {aboutData.techStack.map((tech) => (
+                    <span key={tech} className={chip}>
+                      {tech}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Bottom Bar */}
-      <div className="mt-16 pt-8 desktop:pl-26 desktop:pr-2 border-t border-gray-200 hidden desktop:flex flex-col flex-row justify-between items-center gap-4 text-[10px] font-mono text-gray-400 uppercase tracking-widest">
-        <div className="flex items-center gap-3 w-fit">
-          {/* <span className="relative flex h-2 w-2"> */}
-          {/*   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span> */}
-          {/*   <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span> */}
-          {/* </span> */}
-          {/* Available for new opportunities */}
-          Nice to meet you
+        {/* ── Bottom bar ── */}
+        <div className="hidden desktop:flex flex-row justify-between items-center gap-4 px-8 tablet:px-14 py-4 border-t border-gray-200 text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+          <span>Nice to meet you</span>
+          <p>Built with Astro &amp; Way Too Much CSS</p>
         </div>
-        <p>Built with Astro & Way Too Much CSS</p>
-      </div>
 
-      {/* Pattern Box with Individual Hover Tags */}
-      <div className="desktop:pl-26 desktop:pr-2 pt-8 desktop:pt-0">
-        <div className="animate-pattern-move flex justify-end items-end  mt-8 min-h-[20vh] desktop:min-h-[30vh] p-4 tablet:p-10 rounded-b-main bg-[repeating-linear-gradient(135deg,_#f3f4f6_0,_#334155_2px,_transparent_0,_transparent_50%)] bg-[size:20px_20px] gap-2">
+        {/* ── Pattern box ── */}
+        <div className="animate-pattern-move flex justify-end items-end min-h-[20vh] desktop:min-h-[30vh] p-4 tablet:p-10 border-t border-gray-200 bg-[repeating-linear-gradient(135deg,_#f3f4f6_0,_#334155_2px,_transparent_0,_transparent_50%)] bg-[size:20px_20px]">
           <div className="hidden desktop:flex text-sm text-gray-500 font-mono flex-wrap gap-x-0.5 items-center bg-white h-fit p-1 shadow-sm">
             <span className="mr-2 italic">I love caffeine</span>
             <div className="flex flex-wrap gap-x-0.5">
