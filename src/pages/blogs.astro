@@ -4,9 +4,24 @@ import BlogList from "../components/sections/BlogList.tsx";
 import { getCollection } from "astro:content";
 
 const allPosts = await getCollection("blog");
-const sortedPosts = allPosts.sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
+const sortedPosts = allPosts.length > 0 ? allPosts
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .map((post) => ({
+    ...post,
+    slug: post.id,
+  })) : [{
+    id: 'no-post',
+    slug: 'no-post',
+    data: {
+      title: "No Blog Posts Yet",
+      description: "No blog posts have been published yet. Please check back later.",
+      pubDate: new Date(),
+      tags: ["Blog"],
+      heroImage: ""
+    },
+    body: "",
+    collection: "blog" as const
+  }];
 ---
 
 <Layout title="Blogs">

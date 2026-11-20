@@ -1,5 +1,5 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import "../../styles/global.css";
 
@@ -7,14 +7,36 @@ import { aboutData } from "../../data/aboutData.ts";
 
 export async function getStaticPaths() {
 	const posts = await getCollection('blog');
+	if (posts.length === 0) {
+		return [{
+			params: { slug: undefined },
+			props: {
+				data: {
+					title: "No Blog Post Found",
+					pubDate: new Date(),
+					tags: ["Blog"],
+					heroImage: ""
+				},
+				render: async () => ({
+					Content: () => null
+				})
+			}
+		}];
+	}
 	return posts.map((post) => ({
-		params: { slug: post.slug },
+		params: { slug: post.id },
 		props: post,
 	}));
 }
 
 const post = Astro.props;
-const { Content } = await post.render();
+let Content = () => null;
+if (typeof post.render === 'function') {
+	const rendered = await render(post);
+	Content = rendered.Content;
+} else if (post.Content) {
+	Content = post.Content;
+}
 ---
 
 <Layout title={`${post.data.title} | Blog`}>

@@ -2,25 +2,85 @@
 import Layout from "../layouts/Layout.astro";
 import WorksList from "../components/sections/WorksList.tsx";
 import SidebarInfo from "../components/SidebarInfo.tsx";
-import { getCollection } from 'astro:content';
+import { getCollection } from "astro:content";
 
-const allWorks = await getCollection('works');
-const sortedWorks = allWorks.sort((a, b) => {
-  return b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
-}).map(work => ({
-  slug: work.slug,
-  data: work.data,
-  url: `/works/${work.slug}`
-}));
+const allWorks = await getCollection("works");
+const sortedWorks = allWorks.length > 0 ? allWorks
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .map((work) => ({
+    slug: work.id,
+    data: work.data,
+    url: `/works/${work.id}`,
+  })) : [{
+    slug: 'no-work',
+    data: {
+      title: "No Projects Yet",
+      pubDate: new Date(),
+      status: "halt" as const,
+      location: "Remote",
+      description: "No projects have been published yet. Please check back later.",
+      stack: ["Placeholder"],
+      role: "Developer",
+      experience: "N/A",
+      bio: "Projects will appear here once added to the works collection.",
+      github: ""
+    },
+    url: "/works/no-work"
+  }];
+
 ---
 
-<Layout title="Works | Portfolio">
-  <div class="mb-[10vh] desktop:grid grid-cols-4 items-start gap-8">
-    <div class="desktop:sticky desktop:top-16 col-span-1 flex flex-col gap-4 pb-8">
-      <SidebarInfo client:load />
+<Layout path="About / Works">
+  <section class="w-full bg-white" >
+    <div
+      class="grid grid-cols-1 desktop:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
+    >
+      <!-- ════════ LEFT PANEL: title + profile ════════ -->
+      <div
+        class="border-b desktop:border-b-0 desktop:border-r border-gray-200 bg-white"
+      >
+        <div class="desktop:sticky desktop:top-0 flex flex-col">
+          <div
+            class="flex flex-col gap-1.5 px-8 tablet:px-14 pt-16 pb-10 border-b border-gray-200"
+          >
+            <span
+              class="font-mono text-[11px] text-primary font-bold tracking-[0.25em] uppercase"
+              aria-hidden="true"
+            >
+              DWG-04 · Works
+            </span>
+            <h1
+              class="text-5xl tablet:text-7xl font-black tracking-tighter text-gray-900 leading-none"
+            >
+              Selected
+              <br />
+              Works
+            </h1>
+          </div>
+
+          <div
+            class="flex items-center justify-between px-8 tablet:px-14 py-3 border-b border-gray-200"
+          >
+            <span
+              class="font-mono text-[10px] uppercase tracking-widest text-gray-400"
+            >
+              Total Projects
+            </span>
+            <span
+              class="font-mono text-[10px] uppercase tracking-widest text-primary font-bold"
+            >
+              {String(sortedWorks.length).padStart(2, "0")}
+            </span>
+          </div>
+
+          <SidebarInfo client:load />
+        </div>
+      </div>
+
+      <!-- ════════ RIGHT PANEL: timeline ════════ -->
+      <div class="flex flex-col">
+        <WorksList projects={sortedWorks} client:load />
+      </div>
     </div>
-    <div class="col-span-3">
-      <WorksList projects={sortedWorks} client:load />
-    </div>
-  </div>
+  </section>
 </Layout>

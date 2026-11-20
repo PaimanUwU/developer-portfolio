@@ -50,4 +50,4 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Custom / Ignored Data Files
-src/data/aboutData.ts
+# src/data/aboutData.ts

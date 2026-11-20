@@ -1,24 +1,31 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-// Import everything as a namespace to ensure Vite sees all exports
-import * as LucideIcons from 'lucide-react';
-import { aboutData } from '../data/aboutData';
-import GitHubActivity from "../components/GitHubActivity.tsx";
+import { motion } from "framer-motion";
+import { MapPin, Briefcase, FileText } from "lucide-react";
+import { aboutData } from "../data/aboutData";
+
+/** Section label row, same treatment as DevStack */
+const SectionLabel = ({ code, title }: { code: string; title: string }) => (
+  <div className="flex items-center justify-between px-8 tablet:px-14 py-3 border-b border-gray-200 bg-white">
+    <span className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">
+      {code}
+    </span>
+    <span className="font-mono text-[10px] uppercase tracking-widest text-gray-400">
+      {title}
+    </span>
+  </div>
+);
 
 export default function SidebarInfo() {
-  const { MapPin, Briefcase, FileText, Code2 } = LucideIcons;
-
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      whileInView={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
-      transition={{ delay:0.2, duration: 0.6, ease: "easeOut" }}
-      className="pb-8 desktop:pl-4 desktop:ml-6 space-y-10 text-gray-900"
+      transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
+      className="flex flex-col bg-white text-gray-900"
     >
-      {/* Profile Header */}
-      <div className="space-y-2">
-        <h3 className="text-2xl font-bold tracking-tight">{aboutData.name}</h3>
+      {/* Profile */}
+      <div className="flex flex-col gap-3 px-8 tablet:px-14 py-8 ">
+        <h3 className="text-2xl font-black tracking-tight">{aboutData.name}</h3>
         <div className="flex flex-col gap-2 text-sm font-mono text-gray-500">
           <div className="flex items-center gap-2">
             <Briefcase size={14} /> {aboutData.role}
@@ -29,42 +36,46 @@ export default function SidebarInfo() {
         </div>
       </div>
 
-      {/* Tech Stack */}
-      <div className="space-y-4">
-        <h4 className="text-xs font-mono text-gray-400 uppercase tracking-widest">// Main Skills</h4>
-        <div className="flex flex-wrap gap-2">
-          {aboutData.skills.map(skill => (
-            <span key={skill} className="px-2.5 py-1 bg-gray-50 border border-gray-100 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-700">
-              {skill}
+      {/* Main skills */}
+      <div className="flex flex-wrap gap-2 px-8 tablet:px-14 py-8 border-b border-gray-200">
+        {aboutData.skills.map((skill, i) => (
+          <span
+            key={skill}
+            className="text-xs font-mono text-gray-500 border border-gray-200 px-3 py-1"
+          >
+            <span className="text-primary font-bold mr-1.5">
+              {String(i + 1).padStart(2, "0")}
             </span>
-          ))}
-        </div>
+            {skill}
+          </span>
+        ))}
       </div>
 
-        {/*
-      <div className="space-y-4 flex flex-col">
-        <h4 className="text-xs font-mono text-gray-400 uppercase tracking-widest">// Git Activity</h4>
-        <GitHubActivity username="PaimanUwU" />
-      </div>
-        */}
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-4 border-t border-b py-4 border-gray-100">
+      {/* Quick stats */}
+      <div className="grid grid-cols-2">
         {aboutData.stats.map((stat, index) => (
-          <div key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <span className="block text-xl font-bold text-gray-900">{stat.value}</span>
-            <span className="text-[10px] text-gray-500 uppercase font-mono leading-tight">{stat.label}</span>
+          <div
+            key={index}
+            className="flex flex-col gap-1 px-8 tablet:px-14 py-6 border-b border-gray-200 [&:nth-child(odd)]:border-r"
+          >
+            <span className="text-xl font-black text-gray-900">
+              {stat.value}
+            </span>
+            <span className="text-[10px] text-gray-500 uppercase font-mono leading-tight">
+              {stat.label}
+            </span>
           </div>
         ))}
       </div>
 
-      {/* Socials & Resume */}
-      <div className="space-y-6 pt-4 ">
-        <button className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-lg font-bold text-sm hover:scale-[1.02] transition-all transform active:scale-95 shadow-lg shadow-gray-200">
-          <FileText size={16} />
-          Download Resume
-        </button>
-      </div>
+      {/* Resume */}
+      <button
+        type="button"
+        className="w-full flex items-center justify-center gap-2 px-7 py-6 bg-primary text-white font-bold text-sm hover:opacity-90 transition-opacity duration-300"
+      >
+        <FileText size={16} />
+        Download Resume
+      </button>
     </motion.div>
   );
 }

@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { isLinkActive } from "../utils/navigation.ts";
 
 interface MobileMenuProps {
   currentPath: string;
 }
 
-const MobileMenu = ({ currentPath }: MobileMenuProps) => {
+const MobileMenu = ({ currentPath: initialPath }: MobileMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [currentPath, setCurrentPath] = useState(initialPath);
 
   useEffect(() => {
     const handleToggle = () => setIsOpen((prev) => !prev);
@@ -21,6 +23,24 @@ const MobileMenu = ({ currentPath }: MobileMenuProps) => {
     return () => {
       window.removeEventListener("toggle-mobile-menu", handleToggle);
       window.removeEventListener("close-mobile-menu", handleClose);
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncPath = () => {
+      setCurrentPath(window.location.pathname);
+    };
+
+    syncPath();
+
+    document.addEventListener("astro:after-swap", syncPath);
+    document.addEventListener("astro:page-load", syncPath);
+    window.addEventListener("popstate", syncPath);
+
+    return () => {
+      document.removeEventListener("astro:after-swap", syncPath);
+      document.removeEventListener("astro:page-load", syncPath);
+      window.removeEventListener("popstate", syncPath);
     };
   }, []);
 
@@ -39,6 +59,7 @@ const MobileMenu = ({ currentPath }: MobileMenuProps) => {
   const navLinks = [
     { name: "about", href: "/" },
     { name: "works", href: "/works" },
+    { name: "services", href: "/services" },
     { name: "blogs", href: "/blogs" },
   ];
 
@@ -48,10 +69,7 @@ const MobileMenu = ({ currentPath }: MobileMenuProps) => {
   ];
 
   const getActiveStyles = (path: string) => {
-    const normalizedCurrent = currentPath.replace(/\/$/, "") || "/";
-    const normalizedTarget = path.replace(/\/$/, "") || "/";
-
-    return normalizedCurrent === normalizedTarget
+    return isLinkActive(currentPath, path)
       ? "text-white opacity-100"
       : "text-white/50 hover:text-white transition-colors";
   };
@@ -67,18 +85,22 @@ const MobileMenu = ({ currentPath }: MobileMenuProps) => {
           className="fixed inset-0 z-[100] bg-base-100 flex flex-col items-center justify-center p-8 desktop:hidden"
         >
           <div className="flex flex-col items-center gap-8 mb-12">
-            {navLinks.map((link) => (
-              <motion.a
-                key={link.name}
-                href={link.href}
-                onClick={() => setIsOpen(false)}
-                className={`text-4xl font-bold uppercase tracking-widest ${getActiveStyles(link.href)}`}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {link.name}
-              </motion.a>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = isLinkActive(currentPath, link.href);
+              return (
+                <motion.a
+                  key={link.name}
+                  href={link.href}
+                  aria-current={isActive ? "page" : undefined}
+                  onClick={() => setIsOpen(false)}
+                  className={`text-4xl font-bold uppercase tracking-widest ${getActiveStyles(link.href)}`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {link.name}
+                </motion.a>
+              );
+            })}
           </div>
 
         </motion.div>

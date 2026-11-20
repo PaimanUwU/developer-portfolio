@@ -1,29 +1,146 @@
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@300;400;500;700&display=swap");
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
 :root {
+  /* Color Tokens */
+  --color-primary: #2b7fff;
+  --color-black: #151d20;
+  --color-grey: #f9fafb;
+  --color-white: #ffffff;
+  --color-dark-grey: #757575;
+  --color-dark-gray: #757575;
+
+  /* Font Families */
+  --font-sans: "Funnel Sans", sans-serif;
+  --font-display: "Funnel Display", sans-serif;
+  --font-heading: "Funnel Sans", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+
+  /* Typography Tokens */
+  --token-hero-size: 128px;
+  --token-hero-weight: 700;
+  --token-hero-letter-spacing: -0.03em;
+  --token-hero-font: var(--font-display);
+
+  --token-heading-size: 14px;
+  --token-heading-weight: 700;
+  --token-heading-font: var(--font-sans);
+
+  --token-body-size: 12px;
+  --token-body-weight: 400;
+  --token-body-font: var(--font-sans);
+
+  --token-sub-body-size: 12px;
+  --token-sub-body-weight: 400;
+  --token-sub-body-color: var(--color-dark-grey);
+  --token-sub-body-font: var(--font-sans);
+
+  --token-code-size: 12px;
+  --token-code-weight: 400;
+  --token-code-font: var(--font-mono);
 }
 
-/*
+/* Design System Token Utilities */
+.token-hero {
+  font-family: var(--font-display);
+  font-size: 128px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.token-heading {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.token-body {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.token-sub-body {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-dark-grey);
+  line-height: 1.5;
+}
+
+.token-code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
 @media (min-width: 58rem) {
   * {
     cursor: none !important;
   }
 }
-*/
 
 html {
   scroll-behavior: smooth;
+  font-family: var(--font-sans);
 }
 
 body {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   position: relative;
+  background-color: var(--color-white);
+  color: var(--color-black);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-display {
+  font-family: var(--font-display);
 }
 
 @theme {
+  --color-primary: #2b7fff;
+  --color-black: #151d20;
+  --color-grey: #f9fafb;
+  --color-gray: #f9fafb;
+  --color-white: #ffffff;
+  --color-dark-grey: #757575;
+  --color-dark-gray: #757575;
+
+  --font-sans: "Funnel Sans", sans-serif;
+  --font-display: "Funnel Display", sans-serif;
+  --font-heading: "Funnel Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --text-hero: 128px;
+  --text-hero--line-height: 1;
+  --text-hero--letter-spacing: -0.03em;
+  --text-hero--font-weight: 700;
+
+  --text-token-heading: 14px;
+  --text-token-heading--line-height: 1.4;
+  --text-token-heading--font-weight: 700;
+
+  --text-token-body: 12px;
+  --text-token-body--line-height: 1.5;
+
+  --text-token-sub-body: 12px;
+  --text-token-sub-body--line-height: 1.5;
+
+  --text-token-code: 12px;
+  --text-token-code--line-height: 1.5;
+
+  --letter-spacing-tight-3: -0.03em;
+
   --color-base-100: oklch(21% 0.034 264.665);
   --color-base-200: oklch(13% 0.028 261.692);
   --color-base-300: oklch(37% 0.034 259.733);
@@ -56,7 +173,7 @@ body {
   --breakpoint-*: initial;
   --breakpoint-phone: 24rem;
   --breakpoint-tablet: 58rem;
-  --breakpoint-desktop: 80rem;
+  --breakpoint-desktop: 86rem;
 }
 
 .typed-cursor {
@@ -66,7 +183,6 @@ body {
 }
 
 @keyframes hover-bounce {
-
   0%,
   100% {
     transform: translateY(0);
@@ -179,84 +295,115 @@ body {
 }
 
 @keyframes slide {
-  from { background-position: 0 0; }
-  to { background-position: 20px 0; }
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 20px 0;
+  }
 }
 
 .animate-pattern-move {
   animation: slide 2s linear infinite;
 }
 
+/* Infinite horizontal scroll for project image strip */
+@keyframes scroll-strip {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
 
+.animate-scroll-strip {
+  animation: scroll-strip 20s linear infinite;
+}
 
 /* --- Markdown Article Specific Styles --- */
 
 #markdown-body h1 {
-    font-size: 1.875rem; /* text-3xl */
-    margin-top: 2rem;
-    margin-bottom: 1rem;
+  font-size: 1.875rem; /* text-3xl */
+  margin-top: 2rem;
+  margin-bottom: 1rem;
 }
 
 #markdown-body h2 {
-    font-size: 1.5rem; /* text-2xl */ 
-    text-decoration-line: underline;
-    margin-top: 1.75rem;
-    margin-bottom: 0.75rem;
+  font-size: 1.5rem; /* text-2xl */
+  text-decoration-line: underline;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
 }
 
 #markdown-body h3 {
-    font-size: 1.25rem; /* text-xl */
-    margin-top: 1.5rem;
-    margin-bottom: 0.5rem;
+  font-size: 1.25rem; /* text-xl */
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 #markdown-body pre {
-    background-color: #111827 !important;
-    border: 1px solid #374151;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    margin-top: 2rem;
-    margin-bottom: 2rem;
+  background-color: #111827 !important;
+  border: 1px solid #374151;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
 }
 
 #markdown-body :not(pre) > code {
-    color: #db2777; /* Tailwind pink-600 */
-    background-color: #f3f4f6;
-    padding: 0.2rem 0.4rem;
-    border-radius: 0.375rem;
-    font-size: 0.9em;
-    font-weight: 500;
-    border: 1px solid #e5e7eb;
+  color: #db2777; /* Tailwind pink-600 */
+  background-color: #f3f4f6;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.375rem;
+  font-size: 0.9em;
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
 }
 
 #markdown-body code::before,
 #markdown-body code::after {
-    content: "" !important;
+  content: "" !important;
 }
 
 #markdown-body a {
-    text-decoration: underline;
-    text-underline-offset: 4px;
-    transition: all 0.2s;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: all 0.2s;
 }
 
 #markdown-body a:hover {
-    color: #2563eb; /* blue-600 */
-    text-decoration-color: #2563eb;
+  color: #2563eb; /* blue-600 */
+  text-decoration-color: #2563eb;
 }
 
 #markdown-body hr {
-    border: none;
-    margin: 3rem 0;
-    text-align: left;
-    height: auto;
-    overflow: visible;
+  border: none;
+  margin: 3rem 0;
+  text-align: left;
+  height: auto;
+  overflow: visible;
 }
 
 #markdown-body hr::before {
-    content: "// ";
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    color: #9ca3af; /* gray-400 */
-    font-size: 0.875rem; /* text-sm */
-    letter-spacing: -0.05em;
+  content: "// ";
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  color: #9ca3af; /* gray-400 */
+  font-size: 0.875rem; /* text-sm */
+  letter-spacing: -0.05em;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
 }

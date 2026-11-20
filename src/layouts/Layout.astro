@@ -1,60 +1,87 @@
 ---
 import "../styles/global.css";
+import LoadingScreen from "../components/LoadingScreen.tsx";
 import Navbar from "../components/Navbar.tsx";
 import MobileMenu from "../components/MobileMenu.tsx";
 import Footer from "../components/sections/Footer.tsx";
 import CustomCursor from "../components/CustomCursor.tsx";
 import SmoothScroll from "../components/SmoothScroll.tsx";
-import { ClientRouter } from 'astro:transitions'; // 1. Import Router
+import { ClientRouter } from "astro:transitions";
+import Breadcrumb from "../components/Breadcrumb.tsx";
 
 const pathname = Astro.url.pathname;
 
 interface Props {
-  title?: string;
+  path?: string;
   home?: boolean;
 }
 
-const { home, title = "PaimanUwU" } = Astro.props;
+const { home, path = "PaimanUwU" } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/Icon Light.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/Icon%20Light.svg" />
     <meta name="generator" content={Astro.generator} />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet" />
-    <title>{title}</title>
-   
-    <ClientRouter /> 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Preload the loader logo so it is ready the moment the overlay paints -->
+    <link rel="preload" as="image" href="/Branding-Logo.svg" />
+    <title>{path}</title>
+
+    <ClientRouter />
   </head>
   <body class="bg-white text-black overflow-x-hidden">
+    <LoadingScreen client:load transition:persist />
     <CustomCursor client:load transition:persist />
     <SmoothScroll client:load />
 
-    <div class="absolute z-50 top-0 h-full w-fit flex-none">
-      <Navbar client:load transition:persist currentPath={pathname} home={home} />
+    <div class="absolute z-30 top-0 h-full w-fit flex-none">
+      <Navbar
+        client:load
+        transition:persist
+        currentPath={pathname}
+        home={home}
+      />
     </div>
 
     <MobileMenu client:load transition:persist currentPath={pathname} />
 
-    <main class={`relative w-full top-0 z-0 min-h-screen ${home ? '' : 'desktop:pl-20'}`}>
-      {!home && <span class="p-4 mb-2 font-mono text-sm text-gray-500 block">-// {title}</span>}
+    <main
+      class="relative w-full tablet:w-auto top-0 z-0 min-h-screen tablet:ml-23"
+    >
+      {
+        !home && (
+          <Breadcrumb client:load path={path} />
+        )
+      }
       <slot />
+      <Footer client:load transition:persist />
     </main>
-    <Footer client:load transition:persist />
 
     <script>
-      // With ClientRouter, use 'astro:after-swap' or 'astro:page-load' 
-      // instead of standard 'load' for scroll logic
-      document.addEventListener("astro:after-swap", () => {
-        window.scrollTo(0, 0);
-      });
-
+      // Disable browser scroll restoration so we always control position
       if ("scrollRestoration" in history) {
         history.scrollRestoration = "manual";
       }
+
+      function scrollToTop() {
+        if (window.location.hash) return;
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+
+      document.addEventListener("astro:before-swap", scrollToTop);
+      document.addEventListener("astro:after-swap", scrollToTop);
+      document.addEventListener("astro:page-load", scrollToTop);
     </script>
   </body>
 </html>
