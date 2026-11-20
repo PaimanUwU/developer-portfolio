@@ -1,6 +1,7 @@
 import Menu from "./Menu.tsx";
 import { motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
+import { isLinkActive } from "../utils/navigation.ts";
 
 interface NavProps {
   currentPath: string;
@@ -17,40 +18,47 @@ const NAV_LINKS = [
 
 export default function Navbar({ currentPath: initialPath, home }: NavProps) {
   const [currentPath, setCurrentPath] = useState(initialPath);
-  const [showNavbar, setShowNavbar] = useState(!home);
+  const [showNavbar, setShowNavbar] = useState(true);
 
-  useEffect(() => {
-    if (!home) {
-      setShowNavbar(true);
-      return;
-    }
-
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const vh = window.innerHeight / 2;
-      setShowNavbar(scrollY >= vh);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [home]);
+  // Scroll-based hide/show disabled — navbar stays visible at all times.
+  // useEffect(() => {
+  //   if (!home) {
+  //     setShowNavbar(true);
+  //     return;
+  //   }
+  //
+  //   const handleScroll = () => {
+  //     const scrollY = window.scrollY;
+  //     const vh = window.innerHeight / 2;
+  //     setShowNavbar(scrollY >= vh);
+  //   };
+  //
+  //   window.addEventListener("scroll", handleScroll, { passive: true });
+  //   handleScroll();
+  //
+  //   return () => window.removeEventListener("scroll", handleScroll);
+  // }, [home]);
 
   useEffect(() => {
     const syncPath = () => {
       setCurrentPath(window.location.pathname);
     };
 
+    syncPath();
+
     document.addEventListener("astro:after-swap", syncPath);
-    return () => document.removeEventListener("astro:after-swap", syncPath);
+    document.addEventListener("astro:page-load", syncPath);
+    window.addEventListener("popstate", syncPath);
+
+    return () => {
+      document.removeEventListener("astro:after-swap", syncPath);
+      document.removeEventListener("astro:page-load", syncPath);
+      window.removeEventListener("popstate", syncPath);
+    };
   }, []);
 
   const getActiveStyles = (path: string) => {
-    const normalizedCurrent = currentPath.replace(/\/$/, "") || "/";
-    const normalizedTarget = path.replace(/\/$/, "") || "/";
-
-    return normalizedCurrent === normalizedTarget
+    return isLinkActive(currentPath, path)
       ? "opacity-100 bg-gray-900 text-white"
       : "font-normal opacity-70 hover:bg-gray-200";
   };
@@ -58,13 +66,10 @@ export default function Navbar({ currentPath: initialPath, home }: NavProps) {
   return (
     <motion.div
       className="sticky z-50 top-0 left-0 h-fit tablet:h-screen w-12 desktop:w-23 p-2 desktop:p-6 flex flex-col justify-between border-r border-gray-200 bg-white/70 backdrop-blur-md"
-      style={{
-        translateZ: 0,
-        pointerEvents: home && !showNavbar ? "none" : "auto",
-      }}
-      initial={{ opacity: 0, x: -100 }}
-      animate={{ opacity: showNavbar ? 1 : 0, x: showNavbar ? 0 : -100 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+      style={{ translateZ: 0 }}
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
     >
       <div className="flex desktop:hidden">
         <Menu />
@@ -72,17 +77,21 @@ export default function Navbar({ currentPath: initialPath, home }: NavProps) {
 
       {/* Navigation Links */}
       <div className="hidden desktop:flex flex-col items-center gap-16 py-10">
-        {NAV_LINKS.map((link) => (
-          <a
-            key={link.href}
-            href={link.href}
-            className={`-rotate-90 px-6 py-3 inline-flex gap-4 items-center text-gray-900  font-bold transition-all group ${getActiveStyles(
-              link.href,
-            )}`}
-          >
-            {link.label}
-          </a>
-        ))}
+        {NAV_LINKS.map((link) => {
+          const isActive = isLinkActive(currentPath, link.href);
+          return (
+            <a
+              key={link.href}
+              href={link.href}
+              aria-current={isActive ? "page" : undefined}
+              className={`-rotate-90 px-6 py-3 inline-flex gap-4 items-center text-gray-900 font-bold transition-all group ${getActiveStyles(
+                link.href,
+              )}`}
+            >
+              {link.label}
+            </a>
+          );
+        })}
       </div>
 
       {/* Social Icons */}
